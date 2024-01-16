@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_08di4rn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.16.0">
+  <bpmn:process id="ReviewAccount" name="ReviewAccount" isExecutable="true">
+    <bpmn:documentation>Call back to Mendix</bpmn:documentation>
+    <bpmn:startEvent id="StartEvent_1" name="ReviewAccount">
+      <bpmn:outgoing>SequenceFlow_0egtos0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_15qmd9c">
+      <bpmn:incoming>SequenceFlow_1d9zocl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0y46x0x</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1wfqld7</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0l85ccf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_1l8b7qb" name="Waiting The Reviewer" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Membership Account Setup Approval Process</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0egtos0</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_05wbd5l</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1d9zocl</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_12ke5iy">
+      <bpmn:incoming>SequenceFlow_0y46x0x</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1d9zocl" sourceRef="Task_1l8b7qb" targetRef="ExclusiveGateway_15qmd9c" />
+    <bpmn:sequenceFlow id="SequenceFlow_0egtos0" sourceRef="StartEvent_1" targetRef="Task_1l8b7qb" />
+    <bpmn:sequenceFlow id="SequenceFlow_0y46x0x" name="Reject" sourceRef="ExclusiveGateway_15qmd9c" targetRef="EndEvent_12ke5iy">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("reviewAccountStatus")=='REJECT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_03zojpt">
+      <bpmn:incoming>SequenceFlow_1nkg1iy</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1wfqld7" name="Approved" sourceRef="ExclusiveGateway_15qmd9c" targetRef="ServiceTask_0nyehg8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("reviewAccountStatus")=='APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0l85ccf" name="More" sourceRef="ExclusiveGateway_15qmd9c" targetRef="UserTask_1jgtc68">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("reviewAccountStatus")=='MORE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ServiceTask_0nyehg8" name="Activate Account">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl');
+adapterUrl + '/unsecure/account/createRiteAccount';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var newAccountRequest=execution.getVariable("newAccountRequest");
+java.lang.System.out.println(newAccountRequest);
+
+newAccountRequest.toString();</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="WsResponse">
+              <camunda:script scriptFormat="JavaScript">200;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="vSaveNewAccountResult">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1wfqld7</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0fgovi4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_03pxa55</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_03pxa55" sourceRef="ServiceTask_0nyehg8" targetRef="ExclusiveGateway_16cxk44" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_16cxk44" name="Success">
+      <bpmn:incoming>SequenceFlow_03pxa55</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1nkg1iy</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1im8ety</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1nkg1iy" name="Yes" sourceRef="ExclusiveGateway_16cxk44" targetRef="EndEvent_03zojpt">
+      <bpmn:documentation>Active</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${WsResponse== 200}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="UserTask_060341t" name="Pending for Reviewing the issue" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Check why Accoun Creation Failed Or need to send again</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_1im8ety</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_13vi987</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1im8ety" name="No" sourceRef="ExclusiveGateway_16cxk44" targetRef="UserTask_060341t">
+      <bpmn:documentation>Check if Account Create successful or not</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${WsResponse!= 200}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_090jucm" name="Corected">
+      <bpmn:incoming>SequenceFlow_13vi987</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0fgovi4</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_01l1743</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_13vi987" sourceRef="UserTask_060341t" targetRef="ExclusiveGateway_090jucm" />
+    <bpmn:sequenceFlow id="SequenceFlow_0fgovi4" name="Yes" sourceRef="ExclusiveGateway_090jucm" targetRef="ServiceTask_0nyehg8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_1yz7jj3">
+      <bpmn:incoming>SequenceFlow_01l1743</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_01l1743" name="No" sourceRef="ExclusiveGateway_090jucm" targetRef="EndEvent_1yz7jj3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="UserTask_1jgtc68" name="Waiting The Customer" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Membership Account Setup Approval Process</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0l85ccf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_05wbd5l</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_05wbd5l" sourceRef="UserTask_1jgtc68" targetRef="Task_1l8b7qb" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ReviewAccount">
+      <bpmndi:BPMNEdge id="SequenceFlow_1d9zocl_di" bpmnElement="SequenceFlow_1d9zocl">
+        <di:waypoint x="526" y="302" />
+        <di:waypoint x="716" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0egtos0_di" bpmnElement="SequenceFlow_0egtos0">
+        <di:waypoint x="296" y="302" />
+        <di:waypoint x="426" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="260" y="284" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="242" y="327" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_15qmd9c_di" bpmnElement="ExclusiveGateway_15qmd9c" isMarkerVisible="true">
+        <dc:Bounds x="716" y="277" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="717" y="253" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1u24net_di" bpmnElement="Task_1l8b7qb">
+        <dc:Bounds x="426" y="262" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_12ke5iy_di" bpmnElement="EndEvent_12ke5iy">
+        <dc:Bounds x="1062" y="284" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0y46x0x_di" bpmnElement="SequenceFlow_0y46x0x">
+        <di:waypoint x="766" y="302" />
+        <di:waypoint x="1062" y="302" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="900" y="284" width="33" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_03zojpt_di" bpmnElement="EndEvent_03zojpt">
+        <dc:Bounds x="1356" y="449" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wfqld7_di" bpmnElement="SequenceFlow_1wfqld7">
+        <di:waypoint x="741" y="327" />
+        <di:waypoint x="741" y="467" />
+        <di:waypoint x="874" y="467" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="788" y="446" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0l85ccf_di" bpmnElement="SequenceFlow_0l85ccf">
+        <di:waypoint x="741" y="277" />
+        <di:waypoint x="741" y="80" />
+        <di:waypoint x="690" y="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="750" y="201" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0nyehg8_di" bpmnElement="ServiceTask_0nyehg8">
+        <dc:Bounds x="879" y="427" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_03pxa55_di" bpmnElement="SequenceFlow_03pxa55">
+        <di:waypoint x="979" y="467" />
+        <di:waypoint x="1138" y="467" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_16cxk44_di" bpmnElement="ExclusiveGateway_16cxk44" isMarkerVisible="true">
+        <dc:Bounds x="1138" y="442" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1142" y="499" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1nkg1iy_di" bpmnElement="SequenceFlow_1nkg1iy">
+        <di:waypoint x="1188" y="467" />
+        <di:waypoint x="1356" y="467" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1264" y="449" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_060341t_di" bpmnElement="UserTask_060341t">
+        <dc:Bounds x="691" y="704" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1im8ety_di" bpmnElement="SequenceFlow_1im8ety">
+        <di:waypoint x="1163" y="492" />
+        <di:waypoint x="1163" y="744" />
+        <di:waypoint x="791" y="744" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1171" y="615" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_090jucm_di" bpmnElement="ExclusiveGateway_090jucm" isMarkerVisible="true">
+        <dc:Bounds x="716" y="554" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="719" y="611" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_13vi987_di" bpmnElement="SequenceFlow_13vi987">
+        <di:waypoint x="741" y="704" />
+        <di:waypoint x="741" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fgovi4_di" bpmnElement="SequenceFlow_0fgovi4">
+        <di:waypoint x="766" y="579" />
+        <di:waypoint x="929" y="579" />
+        <di:waypoint x="929" y="507" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="839" y="561" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1yz7jj3_di" bpmnElement="EndEvent_1yz7jj3">
+        <dc:Bounds x="579" y="561" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_01l1743_di" bpmnElement="SequenceFlow_01l1743">
+        <di:waypoint x="716" y="579" />
+        <di:waypoint x="615" y="579" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="658" y="561" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1jgtc68_di" bpmnElement="UserTask_1jgtc68">
+        <dc:Bounds x="590" y="40" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_05wbd5l_di" bpmnElement="SequenceFlow_05wbd5l">
+        <di:waypoint x="590" y="80" />
+        <di:waypoint x="476" y="80" />
+        <di:waypoint x="476" y="262" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

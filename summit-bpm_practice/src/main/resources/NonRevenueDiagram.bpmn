@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_08di4rn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.16.0">
+  <bpmn:process id="NonRevenue" name="NonRevenue" isExecutable="true">
+    <bpmn:documentation>Call back to Mendix</bpmn:documentation>
+    <bpmn:startEvent id="StartEvent_1" name="nonRevenue">
+      <bpmn:outgoing>SequenceFlow_0egtos0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_15qmd9c" name="Approved">
+      <bpmn:incoming>SequenceFlow_1d9zocl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1y8wjkp</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_11iedxz</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_1l8b7qb" name="Ready For Assignment Queue" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Create Non Revenue Account Approval Process</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_1tporjb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1d9zocl</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_1iz1sqt">
+      <bpmn:incoming>SequenceFlow_1ixcz4u</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_12ke5iy">
+      <bpmn:incoming>SequenceFlow_1y8wjkp</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1y8wjkp" sourceRef="ExclusiveGateway_15qmd9c" targetRef="EndEvent_12ke5iy">
+      <bpmn:documentation>Not Approval Keep the Account Pending</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1d9zocl" sourceRef="Task_1l8b7qb" targetRef="ExclusiveGateway_15qmd9c" />
+    <bpmn:sequenceFlow id="SequenceFlow_0egtos0" sourceRef="StartEvent_1" targetRef="UserTask_0h5wjxb" />
+    <bpmn:sequenceFlow id="SequenceFlow_11iedxz" sourceRef="ExclusiveGateway_15qmd9c" targetRef="ServiceTask_16tau40">
+      <bpmn:documentation>Test  Approval Flag</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ServiceTask_16tau40" name="If Approve go and create Non Revenue">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var mendixUrl = execution.getVariable('adapterUrl');
+mendixUrl + '/unsecure/account/createRiteAccount';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var newAccountRequest=execution.getVariable("newAccountRequest");
+java.lang.System.out.println(newAccountRequest);
+
+newAccountRequest.toString();</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="WsResponse">
+              <camunda:script scriptFormat="JavaScript">200;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="vSaveNewAccountResult">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_11iedxz</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1j0zbz9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0jyvv44</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0z42h1g">
+      <bpmn:incoming>SequenceFlow_0jyvv44</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ixcz4u</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_08msl90</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1ixcz4u" sourceRef="ExclusiveGateway_0z42h1g" targetRef="EndEvent_1iz1sqt">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${WsResponse== 200}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_08msl90" name="Check if Account Create successful or not" sourceRef="ExclusiveGateway_0z42h1g" targetRef="Task_00fgboi">
+      <bpmn:documentation>Check if Account Create successful or not</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${WsResponse!= 200}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_00fgboi" name="Check why Accoun Creation Failed" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Check why Accoun Creation Failed Or need to send again</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_08msl90</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_11tw3q5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1jfi858" name="Approved">
+      <bpmn:incoming>SequenceFlow_11tw3q5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1j0zbz9</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_07mjnwa</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_11tw3q5" sourceRef="Task_00fgboi" targetRef="ExclusiveGateway_1jfi858" />
+    <bpmn:sequenceFlow id="SequenceFlow_1j0zbz9" sourceRef="ExclusiveGateway_1jfi858" targetRef="ServiceTask_16tau40">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_1mtvo17">
+      <bpmn:incoming>SequenceFlow_07mjnwa</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_07mjnwa" sourceRef="ExclusiveGateway_1jfi858" targetRef="EndEvent_1mtvo17">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0jyvv44" sourceRef="ServiceTask_16tau40" targetRef="ExclusiveGateway_0z42h1g" />
+    <bpmn:userTask id="UserTask_0h5wjxb" name="Create Non Revenue Account" camunda:candidateGroups="rhAdministrator,rhAsst_Director,rhCSC_Manager,rhCSC_Asst_Manager,rhFin_Manager">
+      <bpmn:documentation>Ready For Assignment Queue</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0egtos0</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1tporjb</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1tporjb" sourceRef="UserTask_0h5wjxb" targetRef="Task_1l8b7qb" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="NonRevenue">
+      <bpmndi:BPMNEdge id="SequenceFlow_0jyvv44_di" bpmnElement="SequenceFlow_0jyvv44">
+        <di:waypoint x="640" y="302" />
+        <di:waypoint x="725" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_07mjnwa_di" bpmnElement="SequenceFlow_07mjnwa">
+        <di:waypoint x="503" y="449" />
+        <di:waypoint x="1047" y="449" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j0zbz9_di" bpmnElement="SequenceFlow_1j0zbz9">
+        <di:waypoint x="478" y="424" />
+        <di:waypoint x="478" y="302" />
+        <di:waypoint x="540" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11tw3q5_di" bpmnElement="SequenceFlow_11tw3q5">
+        <di:waypoint x="478" y="562" />
+        <di:waypoint x="478" y="474" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08msl90_di" bpmnElement="SequenceFlow_08msl90">
+        <di:waypoint x="750" y="327" />
+        <di:waypoint x="750" y="602" />
+        <di:waypoint x="528" y="602" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="563" y="639" width="88" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ixcz4u_di" bpmnElement="SequenceFlow_1ixcz4u">
+        <di:waypoint x="775" y="302" />
+        <di:waypoint x="1047" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11iedxz_di" bpmnElement="SequenceFlow_11iedxz">
+        <di:waypoint x="478" y="157" />
+        <di:waypoint x="478" y="302" />
+        <di:waypoint x="540" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0egtos0_di" bpmnElement="SequenceFlow_0egtos0">
+        <di:waypoint x="130" y="132" />
+        <di:waypoint x="154" y="132" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1d9zocl_di" bpmnElement="SequenceFlow_1d9zocl">
+        <di:waypoint x="384" y="132" />
+        <di:waypoint x="453" y="132" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1y8wjkp_di" bpmnElement="SequenceFlow_1y8wjkp">
+        <di:waypoint x="503" y="132" />
+        <di:waypoint x="1047" y="132" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="94" y="114" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="81" y="157" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_15qmd9c_di" bpmnElement="ExclusiveGateway_15qmd9c" isMarkerVisible="true">
+        <dc:Bounds x="453" y="107" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="454" y="83" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1u24net_di" bpmnElement="Task_1l8b7qb">
+        <dc:Bounds x="284" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1iz1sqt_di" bpmnElement="EndEvent_1iz1sqt">
+        <dc:Bounds x="1047" y="284" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_12ke5iy_di" bpmnElement="EndEvent_12ke5iy">
+        <dc:Bounds x="1047" y="114" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_044pced_di" bpmnElement="Task_00fgboi">
+        <dc:Bounds x="428" y="562" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1jfi858_di" bpmnElement="ExclusiveGateway_1jfi858" isMarkerVisible="true">
+        <dc:Bounds x="453" y="424" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="396" y="442" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1mtvo17_di" bpmnElement="EndEvent_1mtvo17">
+        <dc:Bounds x="1047" y="431" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_16tau40_di" bpmnElement="ServiceTask_16tau40">
+        <dc:Bounds x="540" y="262" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0z42h1g_di" bpmnElement="ExclusiveGateway_0z42h1g" isMarkerVisible="true">
+        <dc:Bounds x="725" y="277" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0h5wjxb_di" bpmnElement="UserTask_0h5wjxb">
+        <dc:Bounds x="154" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1tporjb_di" bpmnElement="SequenceFlow_1tporjb">
+        <di:waypoint x="254" y="132" />
+        <di:waypoint x="284" y="132" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

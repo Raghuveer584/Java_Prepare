@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_13li8rr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.5.0">
+  <bpmn:process id="feeCalculation" name="Fee Calculation" isExecutable="true">
+    <bpmn:businessRuleTask id="BusinessRuleTask_1k69d6c" name="Tag Fee DMN" camunda:resultVariable="tagFeeValues" camunda:decisionRef="tagFee">
+      <bpmn:incoming>SequenceFlow_1tifeac</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02llada</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0x751hu">
+      <bpmn:incoming>SequenceFlow_1pms5xx</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0h7mmrv</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ynm7bf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="ScriptTask_0slx6go" name="Put in the map Fee" scriptFormat="JavaScript">
+      <bpmn:incoming>SequenceFlow_02llada</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1acwi10</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1pms5xx</bpmn:outgoing>
+      <bpmn:script>
+java.lang.System.out.println('Put Fee in the Map');
+var currentIndex = execution.getVariable("index");
+var currentTagCount = execution.getVariable('currentTagCount');
+var tagNode= execution.getVariable("tagNode");
+java.lang.System.out.println('Index ' + currentIndex);
+var tags = tagNode.elements();
+var tag = tags.get(currentIndex-1);
+var tagFeeValues= execution.getVariable("tagFeeValues");
+
+var planCode = execution.getVariable('planCode');
+java.lang.System.out.println('planCode2: ' + planCode);
+
+var paymentFormId = execution.getVariable('paymentFormId');
+java.lang.System.out.println('paymentFormId2: ' + paymentFormId);
+
+var accountTypeCode = execution.getVariable('accountTypeCode');
+java.lang.System.out.println('accountTypeCode2: ' + accountTypeCode);
+
+if (tagFeeValues != null &amp;&amp; tagFeeValues.size()&gt;0) {
+var tagFeeValue= tagFeeValues.get(0);
+java.lang.System.out.println('tsfFee: ' + tagFeeValue.get('tsfFee'));
+tag.prop('tagPrice', tagFeeValue.get('tsfFee'));
+java.lang.System.out.println('tdaFee: ' + tagFeeValue.get('tdaFee'));
+tag.prop('tagDepositPrice', tagFeeValue.get('tdaFee'));
+}
+
+execution.setVariableLocal("tagNode",tagNode);
+if (tag.fieldNames().contains('tagTypeId') ) {
+execution.setVariableLocal("tagTypeId",tag.prop('tagTypeId').numberValue());
+java.lang.System.out.println('Tag Count ' + (currentTagCount +currentIndex+1));
+execution.setVariableLocal("tagCount",currentTagCount +currentIndex+1);
+execution.setVariableLocal("planCode",planCode);
+execution.setVariableLocal("accountTypeCode",accountTypeCode);
+execution.setVariableLocal("paymentFormId",paymentFormId);
+}
+
+execution.setVariableLocal("index",currentIndex+1);
+execution.removeVariable("tagFeeValues");</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="ScriptTask_1008amc" name="Prepare Variable" scriptFormat="JavaScript">
+      <bpmn:incoming>SequenceFlow_1vrahtw</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1xgibyg</bpmn:outgoing>
+      <bpmn:script>java.lang.System.out.println('Start Fee Calculation');
+var currentTagCount = execution.getVariable('currentTagCount');
+var node = execution.getVariable("tagNode");
+var tags = node.elements();
+var planCode = execution.getVariable('planCode');
+java.lang.System.out.println('planCode: ' + planCode);
+
+var paymentFormId = execution.getVariable('paymentFormId');
+java.lang.System.out.println('paymentFormId: ' + paymentFormId);
+
+var accountTypeCode = execution.getVariable('accountTypeCode');
+java.lang.System.out.println('accountTypeCode: ' + accountTypeCode);
+
+execution.setVariableLocal("index",1);
+var tag = tags.get(0);
+java.lang.System.out.println(' Tag ' + tag.toString());
+if (tag.fieldNames().contains('tagTypeId') ) {
+	execution.setVariableLocal("tagTypeId",tag.prop('tagTypeId').numberValue());
+	execution.setVariableLocal("tagCount",currentTagCount +1);
+	execution.setVariableLocal("planCode",planCode);
+	execution.setVariableLocal("accountTypeCode",accountTypeCode);
+	execution.setVariableLocal("paymentFormId",paymentFormId);
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="ScriptTask_0y2z4j3" name="Result" scriptFormat="JavaScript">
+      <bpmn:incoming>SequenceFlow_1ynm7bf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1e6fmdv</bpmn:outgoing>
+      <bpmn:script>var saveVehicleChanges=execution.getVariable("saveVehicleChangeRequest");
+var tagNode=execution.getVariable("tagNode");
+var vehicleRequestJson = saveVehicleChanges;
+vehicleRequestJson.prop("addTagAccountTagDTO",tagNode);
+execution.setVariableLocal("saveVehicleChangeRequest",vehicleRequestJson);
+java.lang.System.out.println(vehicleRequestJson.toString());</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0019rn5">
+      <bpmn:incoming>SequenceFlow_0bgpmn0</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vrahtw</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1rj7upz</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1ktialb">
+      <bpmn:incoming>SequenceFlow_1xgibyg</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0h7mmrv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1tifeac</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1acwi10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="ScriptTask_18wfszp" name="Preprocess Vehicle Request " scriptFormat="JavaScript">
+      <bpmn:incoming>SequenceFlow_1fur6ea</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0bgpmn0</bpmn:outgoing>
+      <bpmn:script>var saveVehicleChanges=execution.getVariable("saveVehicleChangeRequest");
+if (saveVehicleChanges != null) {
+java.lang.System.out.println('Vehicle request ?');
+var vehicleReqJson = saveVehicleChanges;
+var node = vehicleReqJson.prop("addTagAccountTagDTO");
+var tags = node.elements();
+var tagSize = tags.size();
+execution.setVariableLocal("tagSize",tagSize);
+execution.setVariableLocal("tagNode",node);
+}
+else
+{
+java.lang.System.out.println('No vehicle request ?');
+execution.setVariableLocal("tagSize",0);
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0h7mmrv" name="Continue Loop" sourceRef="ExclusiveGateway_0x751hu" targetRef="ExclusiveGateway_1ktialb">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${index&lt;tagSize+1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1tifeac" sourceRef="ExclusiveGateway_1ktialb" targetRef="BusinessRuleTask_1k69d6c">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var tagTypeId = execution.getVariable('tagTypeId');
+tagTypeId != null;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_02llada" sourceRef="BusinessRuleTask_1k69d6c" targetRef="ScriptTask_0slx6go" />
+    <bpmn:sequenceFlow id="SequenceFlow_1pms5xx" sourceRef="ScriptTask_0slx6go" targetRef="ExclusiveGateway_0x751hu" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ynm7bf" name="Exit Loop" sourceRef="ExclusiveGateway_0x751hu" targetRef="ScriptTask_0y2z4j3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${index==tagSize+1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1acwi10" sourceRef="ExclusiveGateway_1ktialb" targetRef="ScriptTask_0slx6go">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var tagTypeId = execution.getVariable('tagTypeId');
+tagTypeId == null;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1vrahtw" sourceRef="ExclusiveGateway_0019rn5" targetRef="ScriptTask_1008amc">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${tagSize&gt;0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1xgibyg" sourceRef="ScriptTask_1008amc" targetRef="ExclusiveGateway_1ktialb" />
+    <bpmn:sequenceFlow id="SequenceFlow_0bgpmn0" sourceRef="ScriptTask_18wfszp" targetRef="ExclusiveGateway_0019rn5" />
+    <bpmn:endEvent id="EndEvent_0s3u55d">
+      <bpmn:incoming>SequenceFlow_1e6fmdv</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1rj7upz</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1e6fmdv" sourceRef="ScriptTask_0y2z4j3" targetRef="EndEvent_0s3u55d" />
+    <bpmn:sequenceFlow id="SequenceFlow_1rj7upz" sourceRef="ExclusiveGateway_0019rn5" targetRef="EndEvent_0s3u55d">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${tagSize==0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:startEvent id="StartEvent_0djyq0m">
+      <bpmn:outgoing>SequenceFlow_1fur6ea</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1fur6ea" sourceRef="StartEvent_0djyq0m" targetRef="ScriptTask_18wfszp" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="feeCalculation">
+      <bpmndi:BPMNEdge id="SequenceFlow_1fur6ea_di" bpmnElement="SequenceFlow_1fur6ea">
+        <di:waypoint x="197" y="174" />
+        <di:waypoint x="258" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rj7upz_di" bpmnElement="SequenceFlow_1rj7upz">
+        <di:waypoint x="497" y="199" />
+        <di:waypoint x="497" y="403" />
+        <di:waypoint x="1534" y="403" />
+        <di:waypoint x="1534" y="192" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1e6fmdv_di" bpmnElement="SequenceFlow_1e6fmdv">
+        <di:waypoint x="1361" y="174" />
+        <di:waypoint x="1516" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bgpmn0_di" bpmnElement="SequenceFlow_0bgpmn0">
+        <di:waypoint x="358" y="174" />
+        <di:waypoint x="472" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1xgibyg_di" bpmnElement="SequenceFlow_1xgibyg">
+        <di:waypoint x="646" y="174" />
+        <di:waypoint x="677" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vrahtw_di" bpmnElement="SequenceFlow_1vrahtw">
+        <di:waypoint x="522" y="174" />
+        <di:waypoint x="546" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1acwi10_di" bpmnElement="SequenceFlow_1acwi10">
+        <di:waypoint x="702" y="149" />
+        <di:waypoint x="702" y="79" />
+        <di:waypoint x="997" y="79" />
+        <di:waypoint x="997" y="134" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ynm7bf_di" bpmnElement="SequenceFlow_1ynm7bf">
+        <di:waypoint x="1135" y="174" />
+        <di:waypoint x="1261" y="174" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="153" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pms5xx_di" bpmnElement="SequenceFlow_1pms5xx">
+        <di:waypoint x="1047" y="174" />
+        <di:waypoint x="1085" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_02llada_di" bpmnElement="SequenceFlow_02llada">
+        <di:waypoint x="854" y="174" />
+        <di:waypoint x="947" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1tifeac_di" bpmnElement="SequenceFlow_1tifeac">
+        <di:waypoint x="727" y="174" />
+        <di:waypoint x="754" y="174" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0h7mmrv_di" bpmnElement="SequenceFlow_0h7mmrv">
+        <di:waypoint x="1110" y="199" />
+        <di:waypoint x="1110" y="282" />
+        <di:waypoint x="702" y="282" />
+        <di:waypoint x="702" y="199" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="871" y="217" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BusinessRuleTask_1k69d6c_di" bpmnElement="BusinessRuleTask_1k69d6c">
+        <dc:Bounds x="754" y="134" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0x751hu_di" bpmnElement="ExclusiveGateway_0x751hu" isMarkerVisible="true">
+        <dc:Bounds x="1085" y="149" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0slx6go_di" bpmnElement="ScriptTask_0slx6go">
+        <dc:Bounds x="947" y="134" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1008amc_di" bpmnElement="ScriptTask_1008amc">
+        <dc:Bounds x="546" y="134" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0y2z4j3_di" bpmnElement="ScriptTask_0y2z4j3">
+        <dc:Bounds x="1261" y="134" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0019rn5_di" bpmnElement="ExclusiveGateway_0019rn5" isMarkerVisible="true">
+        <dc:Bounds x="472" y="149" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ktialb_di" bpmnElement="ExclusiveGateway_1ktialb" isMarkerVisible="true">
+        <dc:Bounds x="677" y="149" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_18wfszp_di" bpmnElement="ScriptTask_18wfszp">
+        <dc:Bounds x="258" y="134" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0s3u55d_di" bpmnElement="EndEvent_0s3u55d">
+        <dc:Bounds x="1516" y="156" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0djyq0m_di" bpmnElement="StartEvent_0djyq0m">
+        <dc:Bounds x="161" y="156" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

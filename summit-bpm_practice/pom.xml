@@ -1,0 +1,396 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.etcc.ritehorizon.mendix</groupId>
+	<artifactId>summit-bpm</artifactId>
+	<version>${summitbpm.version}</version>
+
+	<properties>
+		<jenkinsBuild.slaveLabel>3.3.9-jdk8</jenkinsBuild.slaveLabel>
+		<jenkinsBuild.dockerImageLabel>etcc_maven:3.3.9-jdk8u212</jenkinsBuild.dockerImageLabel> <!-- maven:3.3.9-jdk-8 -->
+		<nexusReleaseBuildRepo>maven-releases</nexusReleaseBuildRepo>
+		<nexusSnapshotBuildRepo>maven-snapshot-builds</nexusSnapshotBuildRepo>
+		<etcckafkahelper.version>OVERRIDE_WITH_COMMAND_LINE_VALUE</etcckafkahelper.version>
+		<mendixnotificationapi.version>OVERRIDE_WITH_COMMAND_LINE_VALUE</mendixnotificationapi.version>
+		<version.camunda>7.9.0</version.camunda>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<camel.version>2.18.3</camel.version>
+		<docker.pull.registry>nexus01.etcc.com:18443</docker.pull.registry>
+		<riteosslog4jappender.version>OVERRIDE_WITH_COMMAND_LINE_VALUE</riteosslog4jappender.version> <!-- Value gets replaced by the Jenkins build w/ the latest available version. -->
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>docker</id>
+			<activation>
+				<property>
+					<name>dockerBuild</name>
+				</property>
+				<file>                                                    <!-- NOTE: ${project.basedir} fails here. -->
+					<exists>${basedir}/src/main/docker/Dockerfile</exists><!-- Added this
+						so it won't try to build on zero-parent, when building zero-core. -->
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<version>0.4.13</version>
+						<configuration>
+							<serverId>nexusDockerRegistry</serverId>
+							<imageName>${docker.push.registry}/${project.groupId}.${project.artifactId}:${project.version}</imageName>
+							<dockerDirectory>${project.build.outputDirectory}</dockerDirectory>
+							<resources>
+								<resource>
+									<targetPath>/</targetPath>
+									<directory>${project.build.directory}</directory>
+									<include>${project.build.finalName}-exec.jar</include>
+									<include>${project.build.finalName}.jar</include>
+								</resource>
+							</resources>
+
+							<registryUrl>${docker.pull.registry}</registryUrl><!-- Adding these
+								to deal with bug in pulling from private Nexus while building image. -->
+							<useConfigFile>true</useConfigFile>               <!-- Looks for credentials in $HOME/.docker/config.json file that 'docker
+								login' creates. -->
+							<noCache>true</noCache>
+						</configuration>
+						<executions>
+							<execution>
+								<id>build-image</id>
+								<phase>package</phase>
+								<goals>
+									<goal>build</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>push-image</id>
+								<phase>deploy</phase>
+								<goals>
+									<goal>push</goal>
+								</goals>
+							</execution>
+							<execution> <!-- Clean-up on the host after image is uploaded to Nexus. -->
+								<id>remove-image</id>
+								<phase>deploy</phase>
+								<goals>
+									<goal>removeImage</goal>
+								</goals>
+								<configuration>
+									<imageName>${docker.push.registry}/${project.groupId}.${project.artifactId}</imageName>
+									<imageTags>${project.version}</imageTags>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>nexusRelease</id>
+			<properties>
+				<docker.push.registry>nexus01.etcc.com:18445</docker.push.registry>
+			</properties>
+			<distributionManagement>
+				<repository>
+					<id>releaseDeploymentRepo</id>
+					<name>releaseRepo</name>
+					<url>https://nexus01.etcc.com/repository/${nexusReleaseBuildRepo}/</url>
+				</repository>
+			</distributionManagement>
+			<build>
+				<plugins>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>nexusSnapshot</id>
+			<properties>
+				<docker.push.registry>nexus01.etcc.com:18444</docker.push.registry>
+			</properties>
+			<distributionManagement>
+				<repository>
+					<id>snapshotDeploymentRepo</id>
+					<name>snapshotRepo</name>
+					<url>https://nexus01.etcc.com/repository/${nexusSnapshotBuildRepo}/</url>
+				</repository>
+			</distributionManagement>
+			<build>
+				<plugins>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-bom</artifactId>
+				<version>2.17.1</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>2.0.2.RELEASE</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.camunda.connect</groupId>
+				<artifactId>camunda-connect-bom</artifactId>
+				<scope>import</scope>
+				<type>pom</type>
+				<version>1.0.7</version>
+			</dependency>
+			<dependency>
+				<groupId>org.camunda.bpm</groupId>
+				<artifactId>camunda-bom</artifactId>
+				<scope>import</scope>
+				<type>pom</type>
+				<version>${version.camunda}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		
+	
+		<dependency>
+			<groupId>org.camunda.bpm.springboot</groupId>
+			<artifactId>camunda-bpm-spring-boot-starter-webapp</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		    <version>42.2.19</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc8</artifactId>
+			<version>12.2.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>aqapi</artifactId>
+			<version>11.2.0.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.connect</groupId>
+			<artifactId>camunda-connect-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.connect</groupId>
+			<artifactId>camunda-connect-connectors-all</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm.springboot</groupId>
+			<artifactId>camunda-bpm-spring-boot-starter-rest</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm</groupId>
+			<artifactId>camunda-engine-plugin-connect</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm.extension.reactor</groupId>
+			<artifactId>camunda-bpm-reactor-core</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.connect</groupId>
+			<artifactId>camunda-connect-http-client</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm</groupId>
+			<artifactId>camunda-engine-plugin-spin</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.spin</groupId>
+			<artifactId>camunda-spin-dataformat-json-jackson</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm.extension.camel</groupId>
+			<artifactId>camunda-bpm-camel-spring</artifactId>
+			<version>0.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-core</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-ftp</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-spring-boot</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jms</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.camunda.bpm.extension.camel</groupId>
+			<artifactId>camunda-bpm-camel-cdi</artifactId>
+			<version>0.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-kafka</artifactId>
+			<version>2.18.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.jms</groupId>
+			<artifactId>javax.jms-api</artifactId>
+			<version>2.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.transaction</groupId>
+			<artifactId>javax.transaction-api</artifactId>
+			<version>1.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.etcc.ritehorizon</groupId>
+			<artifactId>etcc-kafka-helper</artifactId>
+			<version>${etcckafkahelper.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.etcc.ritehorizon</groupId>
+			<artifactId>mendix-notification-api</artifactId> <!-- 0.2.0-RELEASE -->
+			<version>${mendixnotificationapi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.etcc.ritehorizon.zero</groupId>
+			<artifactId>riteoss-log4j-appender</artifactId>
+			<version>${riteosslog4jappender.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.lmax</groupId>
+					<artifactId>disruptor</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+
+	<build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/docker</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>2.0.2.RELEASE</version>
+				<configuration>
+					<layout>ZIP</layout>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+						<configuration>
+							<executable>true</executable>
+							<classifier>exec</classifier>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>Nexus repository -- maven-releases</id>
+			<url>https://nexus01.etcc.com/repository/${nexusReleaseBuildRepo}/</url>
+		</repository>
+		<repository>
+			<id>Nexus repository -- maven-snapshot-builds</id>
+			<url>https://nexus01.etcc.com/repository/${nexusSnapshotBuildRepo}/</url>
+		</repository>
+		<repository>
+			<id>Nexus repository -- maven-thirdparty</id>
+			<url>https://nexus01.etcc.com/repository/maven-thirdparty/</url>
+		</repository>
+		<!-- ******************************************************************************** -->
+		<!-- ******************************************************************************** -->
+		<!-- External repositories like maven-central ALWAYS need to go at the bottom!!       -->
+		<!-- It is a security vulnerability to put external repositories higher in priority!! -->
+		<!-- ******************************************************************************** -->
+		<!-- ******************************************************************************** -->
+		<repository>
+			<id>Nexus repository -- maven-central</id>
+			<url>https://nexus01.etcc.com/repository/maven-central/</url>
+		</repository>
+		<repository>
+			<id>central</id>
+			<url>https://nexus01.etcc.com/repository/maven-apache/</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>central</id>
+			<url>https://nexus01.etcc.com/repository/maven-apache/</url>
+		</pluginRepository>
+	</pluginRepositories>
+</project>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_12li85g" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="adjustments" name="adjustments">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="Adjustment Types">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>adjType</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_1sk3iz7" label="Amount">
+        <inputExpression id="LiteralExpression_1wpllzu" typeRef="double">
+          <text>amount</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0nvzc06" label="Vehicle Class Id">
+        <inputExpression id="LiteralExpression_0lmeu0j" typeRef="string">
+          <text>vId</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_08jzz0f" label="Is Non-Revenue Flag">
+        <inputExpression id="LiteralExpression_0smrct2" typeRef="boolean">
+          <text>nonRevenueFlag</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0yb6qkb" label="is OLCSC Account">
+        <inputExpression id="LiteralExpression_0990vti" typeRef="boolean">
+          <text>isOLCSCAccount</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Result" name="result" typeRef="string" />
+      <rule id="DecisionRule_0k8req1">
+        <description>Pending Case</description>
+        <inputEntry id="UnaryTests_0u0mhw5">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1rk74hm">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0lzy3vk">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0s82rw8">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0hiiigp">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1c3l3ii">
+          <text>"Pending Approval"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1y9wcc2">
+        <description>Approval Case</description>
+        <inputEntry id="UnaryTests_0pgy1ff">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1q7ftfd">
+          <text>&lt;2.50</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0nwx2mh">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0oso0lk">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0ahzta6">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0g8who4">
+          <text>"Approved"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_09swrlw">
+        <description>Pending Case</description>
+        <inputEntry id="UnaryTests_1rtwcnx">
+          <text>"TRO"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1eto8i3">
+          <text>&gt;=2.50</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_18x8nqq">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0osjgvk">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1aopsba">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ejzg3a">
+          <text>"Pending Approval"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0xrm8vn">
+        <description>Approval Case</description>
+        <inputEntry id="UnaryTests_0ytrtlf">
+          <text>"CLM"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1bwljw1">
+          <text>&gt;=2.50</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_16v6etn">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_13y3hji">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1mp3xnu">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_06zorcw">
+          <text>"Approved"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1pld72y">
+        <description>Pending Case</description>
+        <inputEntry id="UnaryTests_1u9h27a">
+          <text>"TCR"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_15drvv3">
+          <text>&gt;=2.50</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1024b41">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_08vgw71">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1nkyx0n">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0bcldzm">
+          <text>"Pending Approval"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0uosi45">
+        <description>Approval Case</description>
+        <inputEntry id="UnaryTests_1p7vo6g">
+          <text>"NRV"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0ytqdfj">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1wln77y">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1c9bx87">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1ef6bxh">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1nwyglg">
+          <text>"Pending Approval"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

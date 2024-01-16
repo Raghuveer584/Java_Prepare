@@ -1,0 +1,156 @@
+// Methods in this file will end up as object methods on the object that load returns.
+def runBuild(String SETTINGS_XML_FILE, String projectName) {
+    stage("${projectName}") {
+
+        def thisBuildProperty = FOLDER_TO_PROPERTY_PREFIX_MAP[projectName]
+        def buildDependencyPropertiesList = ['etcckafkahelper','mendixnotificationapi','riteosslog4jappender']
+
+        // The value of $WORKSPACE can potentially be different for each slave.
+        sh "xmlstarlet edit --inplace --update '/settings/localRepository' --value \"${WORKSPACE}/.m2repo\" ${SETTINGS_XML_FILE}"
+
+        sh "> ${DEPLOYABLES_FILE}"
+
+        // =================================================================================
+        // Retrieve the previous version number from the pom.xml file (with error handling).
+        // =================================================================================
+        def existingPomVersion = sh(
+                        returnStdout: true,
+                        script: "set +x; xpath -q -e '/settings/profiles/profile/properties/${thisBuildProperty}.version/text()' ${SETTINGS_XML_FILE}" // .last.success.version
+                       ).trim()
+        if (DEBUG) { echo "[existingPomVersion]: ${existingPomVersion}" }
+
+        if( existingPomVersion.equals(newPomVersion) ) {
+            echo "Rebuild detected for already-built project ${projectName}.  Skipping this build."
+            REBUILD_DETECTED_ON_ANY_BUILD=true
+        }
+        else {
+            // =================================================================================
+            // Setting ${buildDependencyProperty}.version for ${projectName}.
+            // =================================================================================
+            def localMavenReturnCode = -1
+
+            for (int k=0; k < buildDependencyPropertiesList.size(); k++) {
+                def buildDependencyProperty = buildDependencyPropertiesList[k]
+                def buildDependencyPropertyVersion = SERIAL_BUILD_VERSION_MAP[buildDependencyProperty]
+
+                if (!SERIAL_BUILD_VERSION_MAP[buildDependencyProperty]) { // Would only be used when one of the serial builds gets commented out for some reason (but dependent projects still need to built).
+                    buildDependencyPropertyVersion \
+                           = sh(
+                                 returnStdout: true,
+                                 script: "set +x; xpath -q -e '/settings/profiles/profile/properties/${buildDependencyProperty}.version/text()' ${SETTINGS_XML_FILE}" // .last.success.version
+                                ).trim()
+                    if (DEBUG) { echo "[buildDependencyPropertyVersion]: ${buildDependencyPropertyVersion}" }
+                }
+
+                localMavenReturnCode = sh(
+                                     returnStatus: true,
+                                     script: "mvn -s $SETTINGS_XML_FILE --batch-mode org.codehaus.mojo:versions-maven-plugin:2.8.1:set-property -Dproperty=${buildDependencyProperty}.version -DgenerateBackupPoms=false -DnewVersion=${buildDependencyPropertyVersion} -D${thisBuildProperty}.version=${existingPomVersion} > mvn-debug.temp 2>&1"
+                                    )
+                if (DEBUG) { echo "[localMavenReturnCode]: ${localMavenReturnCode}" }
+
+                if (localMavenReturnCode != 0) {
+                    sh "cat mvn-debug.temp"
+                    error "Error in setting ${buildDependencyProperty}.version for ${projectName}.  Maven process failed with exit code $localMavenReturnCode." // This throws hudson.AbortException
+                }
+            }
+
+            // =================================================================================
+            // Setting the new version number in the pom.xml file for ${projectName}.
+            // =================================================================================
+            localMavenReturnCode = sh(
+                                 returnStatus: true,
+                                 script: "mvn -s $SETTINGS_XML_FILE --batch-mode org.codehaus.mojo:versions-maven-plugin:2.8.1:set -DgenerateBackupPoms=false -DnewVersion=${newPomVersion} -D${thisBuildProperty}.version=${existingPomVersion} > mvn-debug.temp 2>&1"
+                                )
+            if (DEBUG) { echo "[localMavenReturnCode]: ${localMavenReturnCode}" }
+
+            if (localMavenReturnCode != 0) {
+                sh "cat mvn-debug.temp"
+                error "Error in setting the new version number for ${projectName}.  Maven process failed with exit code $localMavenReturnCode." // This throws hudson.AbortException
+            }
+
+            def fullDockerImageName = ""
+
+            // =================================================================================
+            // Building ${projectName}.
+            // =================================================================================
+            try {
+                sh """#!/bin/bash
+                      set -o pipefail; mvn -s $SETTINGS_XML_FILE --batch-mode clean $MAVEN_GOAL $MAVEN_FLAGS -DdockerBuild | tee mvn-debug.temp
+                """
+            }
+            catch (buildException) {
+                error "Maven ${projectName} build failed with exception: [${buildException}]"
+            }
+            finally {
+                dir('..') {
+                    try { junit skipPublishingChecks: true, keepLongStdio: true, healthScaleFactor: 0.0, allowEmptyResults: true, testResults: "${projectName}/**/target/*-reports/TEST-*.xml" }
+                    catch (junitException) { echo "Caught: ${junitException}" }
+
+                    try {archiveArtifacts "${projectName}/**/target/*-reports/TEST-*.xml"}
+                    catch (archiveException) {}
+
+                    try { // If a build fails during tests (after image is already created), the docker image never gets removed, so adding this.
+                        fullDockerImageName = sh(
+                                                 returnStdout: true,
+                                                 script: "cat mvn-debug.temp | grep 'Successfully tagged' | awk '{print \$3}'"
+                                                ).trim()
+                        if (fullDockerImageName) {
+                            sh "docker rmi ${fullDockerImageName}"
+                        }
+                    }
+                    catch (removeDockerImageException) {}
+                }
+            }
+
+            // =================================================================================
+            // Processing regular build artifacts.
+            // =================================================================================
+            def localDeployables = sh(
+                                     returnStdout: true,
+                                     script: "cat mvn-debug.temp | grep Uploaded | awk '{print \$3}' | grep -E 'exec\\.jar\$'"
+                                    ).trim()
+
+            def localDeployablesList = localDeployables.tokenize("\n")
+
+            for (int i = 0; i < localDeployablesList.size(); i++) {
+                def deployableUrl = localDeployablesList[i]
+
+                def deployableName = sh(
+                                        returnStdout: true,
+                                        script: "set +x; echo ${deployableUrl} | awk -F '/' '{print \$NF}'"
+                                       ).trim()
+
+                sh "echo \"${deployableUrl}, no-deploy: ${deployableName}\" >> ${DEPLOYABLES_FILE}"
+            }
+
+            // =================================================================================
+            // Processing Docker build artifacts.
+            // =================================================================================
+            fullDockerImageName = sh(
+                                     returnStdout: true,
+                                     script: "cat mvn-debug.temp | grep '\\[INFO\\] Pushing' | awk '{print \$3}'"
+                                    ).trim()
+
+            if (fullDockerImageName) {
+                def nexusUrl = sh(
+                                  returnStdout: true,
+                                  script: "echo ${fullDockerImageName} | awk -F ':' '{print \"https://\"\$1}'"
+                                 ).trim()
+
+                def dockerImageVersion = newPomVersion
+
+                def partialDockerImageName = sh(
+                                                returnStdout: true,
+                                                script: "echo ${fullDockerImageName} | awk -F '/' '{print \$2}' | awk -F ':' '{print \$1}'"
+                                               ).trim()
+                def nexusSearchUrl = nexusUrl + "/#browse/search=name.raw%3D" + partialDockerImageName + "%20AND%20version%3D" + dockerImageVersion
+
+                sh "echo \"${nexusSearchUrl}, docker-deploy: ${fullDockerImageName}\" >> ${DEPLOYABLES_FILE}"
+            }
+        }
+
+        stash name: "${projectName}-stashed-files", useDefaultExcludes: false, includes: "**/${DEPLOYABLES_FILE}"
+    } // end stage
+}
+
+return this;

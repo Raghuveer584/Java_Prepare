@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1p2cauu" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.5.0">
+  <bpmn:process id="ReviewRenewAccountNotification" isExecutable="true">
+    <bpmn:startEvent id="Event_04f5diq" name="ReviewAccount">
+      <bpmn:outgoing>Flow_0s3yz8h</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_1cr29w8">
+      <bpmn:incoming>Flow_1w02ps1</bpmn:incoming>
+      <bpmn:outgoing>Flow_15a18ju</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0y5zsrx</bpmn:outgoing>
+      <bpmn:outgoing>Flow_00v2eh9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_0yi8wpa" name="Waiting For The Reviewer" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Membership Account Setup Approval Process</bpmn:documentation>
+      <bpmn:incoming>Flow_0s7s6f8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1w02ps1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_1szji7r">
+      <bpmn:incoming>Flow_0k042vl</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_0usa1lc">
+      <bpmn:incoming>Flow_03ebn8g</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_1synlqf" name="Waiting For The Customer" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Membership Account Setup Approval Process</bpmn:documentation>
+      <bpmn:incoming>Flow_0621ob2</bpmn:incoming>
+      <bpmn:incoming>Flow_1vzwp5x</bpmn:incoming>
+      <bpmn:outgoing>Flow_11qsbtg</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0s3yz8h" sourceRef="Event_04f5diq" targetRef="Gateway_0wbmzgf" />
+    <bpmn:sequenceFlow id="Flow_1w02ps1" sourceRef="Activity_0yi8wpa" targetRef="Gateway_1cr29w8" />
+    <bpmn:sequenceFlow id="Flow_15a18ju" name="Reject" sourceRef="Gateway_1cr29w8" targetRef="Activity_06i0bv9">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("caseStatus")=='DENIED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0y5zsrx" name="Pending" sourceRef="Gateway_1cr29w8" targetRef="Activity_RequestMore">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("caseStatus")=='PENDING'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_0wbmzgf">
+      <bpmn:incoming>Flow_0s3yz8h</bpmn:incoming>
+      <bpmn:incoming>Flow_11qsbtg</bpmn:incoming>
+      <bpmn:outgoing>Flow_133lqwt</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1s7bc2r</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_133lqwt" name="Ready For Approval" sourceRef="Gateway_0wbmzgf" targetRef="Activity_ReadyForApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("caseStatus")=='READY_FOR_APPROVAL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1s7bc2r" name="Pending" sourceRef="Gateway_0wbmzgf" targetRef="Activity_NeedNewDocumentUpload">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("caseStatus")=='PENDING'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_11qsbtg" sourceRef="Activity_1synlqf" targetRef="Gateway_0wbmzgf" />
+    <bpmn:scriptTask id="Activity_NeedNewDocumentUpload" name="Create notification request" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_1s7bc2r</bpmn:incoming>
+      <bpmn:outgoing>Flow_174sd82</bpmn:outgoing>
+      <bpmn:script>var deliveryMethod = execution.getVariable('deliveryMethod');
+java.lang.System.out.println("deliveryMethod: " + deliveryMethod); 
+var email = execution.getVariable('email');
+java.lang.System.out.println("email: " + email); 
+
+var accountNumber = execution.getVariable('accountId');
+java.lang.System.out.println("accountNumber: " + accountNumber); 
+
+var firstName = execution.getVariable('firstName');
+java.lang.System.out.println("firstName: " + firstName); 
+
+var lastName = execution.getVariable('lastName');
+java.lang.System.out.println("lastName: " + lastName); 
+
+var caseNumber = execution.getVariable('caseNumber');
+java.lang.System.out.println("caseNumber: " + caseNumber); 
+
+var notificationJsonData = '{"AccountNumber":"' + accountNumber + '",' + '"CaseNumber":"' + caseNumber + '",' + '"FirstName":"' + firstName + '",' + '"LastName":"' + lastName + '",' + '"ReceipentEmailAddress":"' + email + '"}';
+
+java.lang.System.out.println("Send notification data: " + notificationJsonData); 
+execution.setVariable('notificationJsonData', notificationJsonData);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Activity_0a6m0lb" name="Send Notification To Customer" camunda:expression="${kafkaExecutor.sendNotification(&#39;RequestRenewMembershipDocument&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_174sd82</bpmn:incoming>
+      <bpmn:outgoing>Flow_0621ob2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_174sd82" sourceRef="Activity_NeedNewDocumentUpload" targetRef="Activity_0a6m0lb" />
+    <bpmn:sequenceFlow id="Flow_0621ob2" sourceRef="Activity_0a6m0lb" targetRef="Activity_1synlqf" />
+    <bpmn:serviceTask id="Activity_1hm0i54" name="Send Notification To Customer" camunda:expression="${kafkaExecutor.sendNotification(&#39;RequestRenewMoreMembershipDocument&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_1dnxizz</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vzwp5x</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1vzwp5x" sourceRef="Activity_1hm0i54" targetRef="Activity_1synlqf" />
+    <bpmn:scriptTask id="Activity_RequestMore" name="Create notification request" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_0y5zsrx</bpmn:incoming>
+      <bpmn:outgoing>Flow_1dnxizz</bpmn:outgoing>
+      <bpmn:script>var email = execution.getVariable('email');
+java.lang.System.out.println("email: " + email); 
+
+var accountNumber = execution.getVariable('accountId');
+java.lang.System.out.println("accountNumber: " + accountNumber); 
+
+var firstName = execution.getVariable('firstName');
+java.lang.System.out.println("firstName: " + firstName); 
+
+var lastName = execution.getVariable('lastName');
+java.lang.System.out.println("lastName: " + lastName); 
+
+var caseNumber = execution.getVariable('caseNumber');
+java.lang.System.out.println("caseNumber: " + caseNumber); 
+
+var notificationJsonData = '{"AccountNumber":"' + accountNumber + '",' + '"CaseNumber":"' + caseNumber + '",' + '"FirstName":"' + firstName + '",' + '"LastName":"' + lastName + '",' + '"ReceipentEmailAddress":"' + email + '"}';
+
+java.lang.System.out.println("Send notification data: " + notificationJsonData); 
+execution.setVariable('notificationJsonData', notificationJsonData);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1dnxizz" sourceRef="Activity_RequestMore" targetRef="Activity_1hm0i54" />
+    <bpmn:scriptTask id="Activity_ReadyForApproval" name="Create notification request" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_133lqwt</bpmn:incoming>
+      <bpmn:outgoing>Flow_1rove4s</bpmn:outgoing>
+      <bpmn:script>var email = execution.getVariable('email');
+java.lang.System.out.println("email: " + email); 
+var accountNumber = execution.getVariable('accountId');
+java.lang.System.out.println("accountNumber: " + accountNumber); 
+var caseNumber = execution.getVariable('caseNumber');
+java.lang.System.out.println("caseNumber: " + caseNumber); 
+
+var firstName = execution.getVariable('firstName');
+java.lang.System.out.println("firstName: " + firstName); 
+
+var lastName = execution.getVariable('lastName');
+java.lang.System.out.println("lastName: " + lastName); 
+
+var notificationJsonData = '{"AccountNumber":"' + accountNumber + '",' + '"CaseNumber":"' + caseNumber + '",' + '"FirstName":"' + firstName + '",' + '"LastName":"' + lastName + '",' + '"ReceipentEmailAddress":"' + email + '"}';
+
+java.lang.System.out.println("Send notification data: " + notificationJsonData); 
+execution.setVariable('notificationJsonData', notificationJsonData);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1rove4s" sourceRef="Activity_ReadyForApproval" targetRef="Activity_09nd5vz" />
+    <bpmn:serviceTask id="Activity_09nd5vz" name="Send Notification To CSR" camunda:expression="${kafkaExecutor.sendNotification(&#39;RequestRenewReviewCase&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_1rove4s</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ot4ozz</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0ot4ozz" sourceRef="Activity_09nd5vz" targetRef="Activity_0djgqtg" />
+    <bpmn:scriptTask id="Activity_06i0bv9" name="Create notification request" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_15a18ju</bpmn:incoming>
+      <bpmn:outgoing>Flow_1j1vjac</bpmn:outgoing>
+      <bpmn:script>var email = execution.getVariable('email');
+java.lang.System.out.println("email: " + email); 
+
+var accountNumber = execution.getVariable('accountId');
+java.lang.System.out.println("accountNumber: " + accountNumber); 
+
+var firstName = execution.getVariable('firstName');
+java.lang.System.out.println("firstName: " + firstName); 
+
+var lastName = execution.getVariable('lastName');
+java.lang.System.out.println("lastName: " + lastName); 
+
+var caseNumber = execution.getVariable('caseNumber');
+java.lang.System.out.println("caseNumber: " + caseNumber); 
+
+var notificationJsonData = '{"AccountNumber":"' + accountNumber + '",' + '"CaseNumber":"' + caseNumber + '",' + '"FirstName":"' + firstName + '",' + '"LastName":"' + lastName + '",' + '"ReceipentEmailAddress":"' + email + '"}';
+
+java.lang.System.out.println("Send notification data: " + notificationJsonData); 
+execution.setVariable('notificationJsonData', notificationJsonData);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Activity_1b37iin" name="Send Notification To Customer" camunda:expression="${kafkaExecutor.sendNotification(&#39;RejectRenewMembershipDocument&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_1j1vjac</bpmn:incoming>
+      <bpmn:outgoing>Flow_0k042vl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0k042vl" sourceRef="Activity_1b37iin" targetRef="Event_1szji7r" />
+    <bpmn:scriptTask id="Activity_1rzvuuz" name="Create notification request" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_00v2eh9</bpmn:incoming>
+      <bpmn:outgoing>Flow_04pl47s</bpmn:outgoing>
+      <bpmn:script>var email = execution.getVariable('email');
+java.lang.System.out.println("email: " + email); 
+
+var accountNumber = execution.getVariable('accountId');
+java.lang.System.out.println("accountNumber: " + accountNumber); 
+
+var firstName = execution.getVariable('firstName');
+java.lang.System.out.println("firstName: " + firstName); 
+
+var lastName = execution.getVariable('lastName');
+java.lang.System.out.println("lastName: " + lastName); 
+
+var caseNumber = execution.getVariable('caseNumber');
+java.lang.System.out.println("caseNumber: " + caseNumber); 
+
+var notificationJsonData = '{"AccountNumber":"' + accountNumber + '",' + '"CaseNumber":"' + caseNumber + '",' + '"FirstName":"' + firstName + '",' + '"LastName":"' + lastName + '",' + '"ReceipentEmailAddress":"' + email + '"}';
+
+java.lang.System.out.println("Send notification data: " + notificationJsonData); 
+execution.setVariable('notificationJsonData', notificationJsonData);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_04pl47s" sourceRef="Activity_1rzvuuz" targetRef="Activity_0yvmw1a" />
+    <bpmn:serviceTask id="Activity_0yvmw1a" name="Send Notification To Customer" camunda:expression="${kafkaExecutor.sendNotification(&#39;ApproveRenewMembershipDocument&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_04pl47s</bpmn:incoming>
+      <bpmn:outgoing>Flow_03ebn8g</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_03ebn8g" sourceRef="Activity_0yvmw1a" targetRef="Event_0usa1lc" />
+    <bpmn:sequenceFlow id="Flow_1j1vjac" sourceRef="Activity_06i0bv9" targetRef="Activity_1b37iin" />
+    <bpmn:sequenceFlow id="Flow_00v2eh9" name="Approved" sourceRef="Gateway_1cr29w8" targetRef="Activity_1rzvuuz">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("caseStatus")=='APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_0djgqtg" name="Send Notification To Customer" camunda:expression="${kafkaExecutor.sendNotification(&#39;ReceiveReviewCase&#39;, execution.getVariable(&#39;deliveryMethod&#39;),&#39;NORMAL&#39;,execution.getVariable(&#39;notificationJsonData&#39;))}">
+      <bpmn:incoming>Flow_0ot4ozz</bpmn:incoming>
+      <bpmn:outgoing>Flow_0s7s6f8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0s7s6f8" sourceRef="Activity_0djgqtg" targetRef="Activity_0yi8wpa" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ReviewRenewAccountNotification">
+      <bpmndi:BPMNEdge id="Flow_0s7s6f8_di" bpmnElement="Flow_0s7s6f8">
+        <di:waypoint x="650" y="550" />
+        <di:waypoint x="690" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00v2eh9_di" bpmnElement="Flow_00v2eh9">
+        <di:waypoint x="870" y="575" />
+        <di:waypoint x="870" y="715" />
+        <di:waypoint x="970" y="715" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="857" y="693" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1j1vjac_di" bpmnElement="Flow_1j1vjac">
+        <di:waypoint x="1070" y="550" />
+        <di:waypoint x="1140" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03ebn8g_di" bpmnElement="Flow_03ebn8g">
+        <di:waypoint x="1240" y="715" />
+        <di:waypoint x="1322" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04pl47s_di" bpmnElement="Flow_04pl47s">
+        <di:waypoint x="1070" y="715" />
+        <di:waypoint x="1140" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k042vl_di" bpmnElement="Flow_0k042vl">
+        <di:waypoint x="1240" y="550" />
+        <di:waypoint x="1322" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ot4ozz_di" bpmnElement="Flow_0ot4ozz">
+        <di:waypoint x="510" y="550" />
+        <di:waypoint x="550" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rove4s_di" bpmnElement="Flow_1rove4s">
+        <di:waypoint x="360" y="550" />
+        <di:waypoint x="410" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dnxizz_di" bpmnElement="Flow_1dnxizz">
+        <di:waypoint x="870" y="340" />
+        <di:waypoint x="870" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vzwp5x_di" bpmnElement="Flow_1vzwp5x">
+        <di:waypoint x="820" y="250" />
+        <di:waypoint x="742" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0621ob2_di" bpmnElement="Flow_0621ob2">
+        <di:waypoint x="640" y="120" />
+        <di:waypoint x="692" y="120" />
+        <di:waypoint x="692" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_174sd82_di" bpmnElement="Flow_174sd82">
+        <di:waypoint x="470" y="120" />
+        <di:waypoint x="540" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11qsbtg_di" bpmnElement="Flow_11qsbtg">
+        <di:waypoint x="642" y="250" />
+        <di:waypoint x="335" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1s7bc2r_di" bpmnElement="Flow_1s7bc2r">
+        <di:waypoint x="310" y="225" />
+        <di:waypoint x="310" y="120" />
+        <di:waypoint x="370" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="269" y="183" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_133lqwt_di" bpmnElement="Flow_133lqwt">
+        <di:waypoint x="310" y="275" />
+        <di:waypoint x="310" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="313" y="345" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0y5zsrx_di" bpmnElement="Flow_0y5zsrx">
+        <di:waypoint x="870" y="525" />
+        <di:waypoint x="870" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="872" y="509" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15a18ju_di" bpmnElement="Flow_15a18ju">
+        <di:waypoint x="895" y="550" />
+        <di:waypoint x="970" y="550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="898" y="563" width="33" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1w02ps1_di" bpmnElement="Flow_1w02ps1">
+        <di:waypoint x="790" y="550" />
+        <di:waypoint x="845" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0s3yz8h_di" bpmnElement="Flow_0s3yz8h">
+        <di:waypoint x="178" y="250" />
+        <di:waypoint x="285" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_04f5diq_di" bpmnElement="Event_04f5diq">
+        <dc:Bounds x="142" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="124" y="275" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1cr29w8_di" bpmnElement="Gateway_1cr29w8" isMarkerVisible="true">
+        <dc:Bounds x="845" y="525" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0yi8wpa_di" bpmnElement="Activity_0yi8wpa">
+        <dc:Bounds x="690" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1szji7r_di" bpmnElement="Event_1szji7r">
+        <dc:Bounds x="1322" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0usa1lc_di" bpmnElement="Event_0usa1lc">
+        <dc:Bounds x="1322" y="697" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1synlqf_di" bpmnElement="Activity_1synlqf">
+        <dc:Bounds x="642" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0wbmzgf_di" bpmnElement="Gateway_0wbmzgf" isMarkerVisible="true">
+        <dc:Bounds x="285" y="225" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04kcr3f_di" bpmnElement="Activity_NeedNewDocumentUpload">
+        <dc:Bounds x="370" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0a6m0lb_di" bpmnElement="Activity_0a6m0lb">
+        <dc:Bounds x="540" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hm0i54_di" bpmnElement="Activity_1hm0i54">
+        <dc:Bounds x="820" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0rvvc93_di" bpmnElement="Activity_RequestMore">
+        <dc:Bounds x="820" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hv8v4s_di" bpmnElement="Activity_ReadyForApproval">
+        <dc:Bounds x="260" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_09nd5vz_di" bpmnElement="Activity_09nd5vz">
+        <dc:Bounds x="410" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_06i0bv9_di" bpmnElement="Activity_06i0bv9">
+        <dc:Bounds x="970" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1b37iin_di" bpmnElement="Activity_1b37iin">
+        <dc:Bounds x="1140" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1rzvuuz_di" bpmnElement="Activity_1rzvuuz">
+        <dc:Bounds x="970" y="675" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0yvmw1a_di" bpmnElement="Activity_0yvmw1a">
+        <dc:Bounds x="1140" y="675" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0djgqtg_di" bpmnElement="Activity_0djgqtg">
+        <dc:Bounds x="550" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

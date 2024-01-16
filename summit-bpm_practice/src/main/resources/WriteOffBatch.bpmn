@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1d04ssj" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.3.0">
+  <bpmn:process id="writeoffbatch" name="Write Off Batch" isExecutable="true" camunda:jobPriority="1" camunda:versionTag="1.0.0">
+    <bpmn:documentation>Call back to Mendix</bpmn:documentation>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1p2ljxa</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1p2ljxa" sourceRef="StartEvent_1" targetRef="WaitingForApproval" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_14samrz">
+      <bpmn:incoming>SequenceFlow_0lq9quj</bpmn:incoming>
+      <bpmn:outgoing>approved</bpmn:outgoing>
+      <bpmn:outgoing>rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="approved" name="APPROVED" sourceRef="ExclusiveGateway_14samrz" targetRef="ProcessApproveWriteOff">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("action")=='APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="rejected" name="REJECTED" sourceRef="ExclusiveGateway_14samrz" targetRef="ProcessRejectWriteOff">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("action")=='REJECTED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_0dykh5l">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="response">${response}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1vgb618</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1vgb618" sourceRef="ProcessApproveWriteOff" targetRef="EndEvent_0dykh5l" />
+    <bpmn:endEvent id="EndEvent_0p43b4s">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="response">${response}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_146wn3e</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_146wn3e" sourceRef="ProcessRejectWriteOff" targetRef="EndEvent_0p43b4s" />
+    <bpmn:userTask id="WaitingForApproval" name="Waiting For Approval" camunda:candidateGroups="rhCSR,rhLead_CSR,rhCSR_Supervisor,rhAdministrator">
+      <bpmn:documentation>Write-Off Batch approval process</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_1p2ljxa</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0lq9quj</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0lq9quj" sourceRef="WaitingForApproval" targetRef="ExclusiveGateway_14samrz" />
+    <bpmn:scriptTask id="ProcessApproveWriteOff" name="Process Approve Write-Off" scriptFormat="JavaScript" camunda:resultVariable="response">
+      <bpmn:extensionElements />
+      <bpmn:incoming>approved</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vgb618</bpmn:outgoing>
+      <bpmn:script>var response = '{'
+ +'"status": "SUCCESS",'
+ +'"action": "APPROVED"'
++'}';
+execution.setVariable('response', response);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="ProcessRejectWriteOff" name="Process Reject Write-Off" scriptFormat="JavaScript" camunda:resultVariable="response">
+      <bpmn:extensionElements />
+      <bpmn:incoming>rejected</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_146wn3e</bpmn:outgoing>
+      <bpmn:script>var response = '{'
+ +'"status": "SUCCESS",'
+ +'"action": "REJECTED"'
++'}';
+execution.setVariable('response', response);</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="writeoffbatch">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_14samrz_di" bpmnElement="ExclusiveGateway_14samrz" isMarkerVisible="true">
+        <dc:Bounds x="529" y="95" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0dykh5l_di" bpmnElement="EndEvent_0dykh5l">
+        <dc:Bounds x="959" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0p43b4s_di" bpmnElement="EndEvent_0p43b4s">
+        <dc:Bounds x="959" y="212" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_129vmxl_di" bpmnElement="WaitingForApproval">
+        <dc:Bounds x="342" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1l0qcyd_di" bpmnElement="ProcessApproveWriteOff">
+        <dc:Bounds x="719" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0h8jjk6_di" bpmnElement="ProcessRejectWriteOff">
+        <dc:Bounds x="719" y="190" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1p2ljxa_di" bpmnElement="SequenceFlow_1p2ljxa">
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="342" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lq9quj_di" bpmnElement="SequenceFlow_0lq9quj">
+        <di:waypoint x="442" y="120" />
+        <di:waypoint x="529" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0salh7t_di" bpmnElement="approved">
+        <di:waypoint x="579" y="120" />
+        <di:waypoint x="719" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="620" y="102" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0318rvw_di" bpmnElement="rejected">
+        <di:waypoint x="554" y="145" />
+        <di:waypoint x="554" y="230" />
+        <di:waypoint x="719" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="625" y="213" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vgb618_di" bpmnElement="SequenceFlow_1vgb618">
+        <di:waypoint x="819" y="120" />
+        <di:waypoint x="959" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_146wn3e_di" bpmnElement="SequenceFlow_146wn3e">
+        <di:waypoint x="819" y="230" />
+        <di:waypoint x="959" y="230" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

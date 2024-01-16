@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN" shutdownHook="disable">
+
+  <Properties>
+    <Property name="logDir">logs</Property>
+    <Property name="appLogFolderName">@project.artifactId@-@project.version@</Property>
+    <Property name="appLogFileName">@project.artifactId@-@project.version@</Property>
+    <Property name="appLogDetail">detail</Property>
+    <Property name="logFileSuffix">.log</Property>
+    <Property name="logFileRoleSuffix">.log.zip</Property>
+    <Property name="logAppend">true</Property>
+    <Property name="logBufferedIO">false</Property>
+    <Property name="logBufferSize">0</Property>
+    <Property name="logFileRollSize">100 MB</Property>
+    <Property name="logFileDeleteAge">30d</Property>
+    <Property name="layoutPattern">%d{yyyy/MM/dd HH:mm:ss.SSS}[%-5p]%x(%F): %m%n</Property>
+  </Properties>
+  
+  <Appenders>
+  	<RiteOSSAlertAppender name="RiteOSSAppender" deviceId="summit-bpm" deviceName="Summit-BPM" deviceIsHost="false">
+      <Component name="defaultComponent" severity="1" minloglevel="ERROR"
+                 eventClass="/app/ajob" defaultConfig="true" eventKey="defaultKey">
+        <Contains ruleName="defaultRule" value="com.etcc.poc.example"/>
+      </Component>
+    </RiteOSSAlertAppender>
+	<Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="{layoutPattern}"/>
+    </Console>
+	<RollingFile name="RollingFile"
+      fileName="${sys:logDir}/${sys:appLogFolderName}/${sys:appLogFileName}-rollingFile${logFileSuffix}"
+      append="${sys:logAppend}" bufferedIO="${sys:logBufferedIO}" bufferSize="${sys:logBufferSize}"
+      filePattern="${sys:logDir}/${sys:appLogFolderName}/${sys:appLogFileName}-rollingFile.%d{yyyy-MM-dd}_%i${logFileRoleSuffix}">
+      <ThresholdFilter level="TRACE" onMatch="ACCEPT"
+        onMismatch="DENY" />
+      <PatternLayout pattern="${layoutPattern}" />
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+        <SizeBasedTriggeringPolicy size="${sys:logFileRollSize}" />
+      </Policies>
+      <DefaultRolloverStrategy>
+        <Delete basePath="${sys:logDir}/${sys:appLogFolderName}">
+          <IfFileName glob="${sys:appLogFileName}-rollingFile.*${logFileRoleSuffix}" />
+          <IfLastModified age="${sys:logFileDeleteAge}" />
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+  </Appenders>
+  
+  <Loggers>
+	<logger name="org.apache.kafka" level="INFO" />
+	<logger name="org.spring" level="INFO" />
+	<logger name="org.apache.kafka.common.metrics" level="INFO" />
+	<logger name="com.etcc" level="DEBUG" additivity="false">
+		<appender-ref ref="RiteOSSAppender" />
+		<appender-ref ref="RollingFile" />
+		<appender-ref ref="Console" />
+	</logger>
+	<Root level="INFO">
+		<appender-ref ref="RollingFile" />
+		<appender-ref ref="Console" />
+    </Root>
+  </Loggers>
+  
+</Configuration>

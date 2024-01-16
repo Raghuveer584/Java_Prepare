@@ -1,0 +1,1251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0t1vlh2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.16.0">
+  <bpmn:process id="TagVehicleActivation" name="TagVehicleActivation" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_0mdqq7n">
+      <bpmn:outgoing>SequenceFlow_18ti238</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="ServiceTask_04lim1g" name="Call Save Tag Service">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/account/saveVehicleChanges';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var saveVehicleChanges=execution.getVariable("saveVehicleChangeRequest");
+java.lang.System.out.println('Activation Case');
+java.lang.System.out.println(saveVehicleChanges.toString());
+saveVehicleChanges.toString();</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="totalPayment">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('totalPayment').numberValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="tagResponse">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = S(response).prop('tagResponse');
+tagResponse;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="hasTagRequest">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('hasTagRequest').boolValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="tagNode">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('tagNode');</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1vzjrn8</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0w7u9jb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ehu3t3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_17xg7bk">
+      <bpmn:incoming>SequenceFlow_0zibxsi</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1qp4pv6</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_05wpf44</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_1997tb6" name="Check Account Balances">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/account/checkPaymentRequired';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var nonSkipPaymentCartItems = execution.getVariable("nonSkipPaymentCartItems");
+var skipPaymentCartItems = execution.getVariable("skipPaymentCartItems");
+var totalPayment= execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var rebillAmount=execution.getVariable("initialPrepaidBalance");
+var lowBalance=execution.getVariable("minLowBalance");
+java.lang.System.out.println("Call Check Payment Balance");                
+        
+java.lang.System.out.println('lowBalance' + lowBalance);
+java.lang.System.out.println('rebillAmount' + rebillAmount);
+
+var message = '{'
+   +'"accountId":'+accountId+ ','
+   +'"totalPayment":'+totalPayment + ','
+   +'"fulfillmentCase":false,'
+   +'"rebillAmount":'+rebillAmount+','
+   +'"lowBalanceLevel":'+lowBalance+','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'          
+    +'}'
+   +'}';               
+message;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="paymentRequired">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('isPaymentRequired').boolValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="cartItemSize">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('cartItemSize').numberValue();</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1kudf0q</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0zibxsi</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="UserTask_0scbm6s" name="Need to provide Payment Information" camunda:candidateGroups="rhCSR,rhSupervisor,rhAdministrator">
+      <bpmn:incoming>SequenceFlow_0w7lfgh</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_00cr8gt</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0sau2bc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1rgyy6p</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="ServiceTask_1wubu7n" name="Checkout Payment">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/account/processTagFulfillmentOneStepCheck';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var price=execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var shiftId=execution.getVariable("shiftId");
+var paramForCheckout=execution.getVariable("paramForCheckout");                
+var cartPayment=execution.getVariable("cartPayment");
+var tagNode=execution.getVariable("tagNode");
+java.lang.System.out.println("Checkout payment with other cart");
+var message='{'
+   +'"accountId":'+accountId+ ','
+   +'"cartPayment":'+cartPayment+ ','
+   +'"fulfillmentCase":false,'
+   +'"paramForCheckout":"'+paramForCheckout+ '",'
+   +'"aDTOs":'+tagNode.toString()+ ','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'   
+    +'}'
++'}';
+java.lang.System.out.println(message);
+
+message;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="hasError">
+              <camunda:script scriptFormat="JavaScript">S(response).fieldNames().contains('errorMessage');</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptData">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptData = !hasError ? S(response).prop('receiptData') : null;
+receiptData;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptDate">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptDate = !hasError ? S(response).prop('detail').prop('receiptDate').stringValue() : null;
+receiptDate;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="cartId">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var cartId = !hasError ? S(response).prop('detail').prop('cartId').numberValue() : null;
+cartId;</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1sa66ml</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_11ehjl5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_0amrq1w" name="OneStep Checkout Payment">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/account/processTagFulfillmentOneStepCheck';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var price=execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var shiftId=execution.getVariable("shiftId");
+var tagNode=execution.getVariable("tagNode");
+var paramForCheckout=execution.getVariable("paramForCheckout");                
+java.lang.System.out.println("One Time Payment");
+var message='{'
+   +'"accountId":'+accountId+ ','
+   +'"fulfillmentCase":false,'
+   +'"paramForCheckout":"'+paramForCheckout+ '",'
+   +'"aDTOs":'+tagNode.toString()+ ','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'   
+    +'}'
++'}';
+java.lang.System.out.println(message);
+
+message;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="hasError">
+              <camunda:script scriptFormat="JavaScript">S(response).fieldNames().contains('errorMessage');</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptData">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptData = !hasError ? S(response).prop('receiptData') : null;
+receiptData;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptDate">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptDate = !hasError ? S(response).prop('detail').prop('receiptDate').stringValue() : null;
+receiptDate;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="cartId">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var cartId = !hasError ? S(response).prop('detail').prop('cartId').numberValue() : null;
+cartId;</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_19fnzro</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ye1bfp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_0vthtln">
+      <bpmn:incoming>SequenceFlow_1vv9lkb</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_0v81i7o" name="Remove Record in Fulfillment App">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('fulfillmentUrl'); 
+var camundaId=execution.getProcessInstanceId();
+adapterUrl + '/fulfillmentwebservice/v1/fulfillmentcase/' + camundaId;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">DELETE</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0v8kw5u</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0a0v68s</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_0jcorv4" name="Update RiteHorizon">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('mendixUrl'); 
+var url = adapterUrl + '/tolltagwebservice/v1/tag';
+java.lang.System.out.println(url);     
+url;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = execution.getVariable('tagResponse');
+tagResponse.prop('camundaId',execution.getProcessInstanceId());
+java.lang.System.out.println('Update Rite Side');
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1jb4vpj</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0sbrmfd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1hp8x9n</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0jgczjw">
+      <bpmn:incoming>SequenceFlow_0ye1bfp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0w7lfgh</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1adlbm7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_10fwvy7" name="Collect Tag Changes">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/collectTagForAccountSetup';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var price=execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var shiftId=execution.getVariable("shiftId");
+var paramForCheckout=execution.getVariable("paramForCheckout");
+var rebillAmount=execution.getVariable("rebillAmount");
+var lowBalanceLevel=execution.getVariable("lowBalance");
+var initialPrepaidBalance=execution.getVariable("initialPrepaidBalance");
+var tagNode=execution.getVariable("tagNode");
+java.lang.System.out.println("Collect Tag Changes");
+var message='{'
+   +'"accountId":'+accountId+ ','
+   +'"fulfillmentCase":false,'
+   +'"paramForCheckout":"'+paramForCheckout+ '",'
+   +'"rebillAmount":'+rebillAmount+','
+   +'"lowBalanceLevel":'+lowBalanceLevel+','
+   +'"initialPrepaidBalance":'+initialPrepaidBalance+','
+   +'"aDTOs":'+tagNode.toString()+','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'   
+    +'}'
++'}';
+java.lang.System.out.println(message);
+message;</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0ddvu40</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_00cr8gt</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_0sqbqbq">
+      <bpmn:incoming>SequenceFlow_1hp8x9n</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1my0vjt">
+      <bpmn:incoming>SequenceFlow_1qp4pv6</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0sau2bc</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ddvu40</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_007r5ad" name="Cancel Fulfillment in RITE">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/fulfillment/cancelFulfillments';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse=execution.getVariable("tagResponse");
+java.lang.System.out.println("Tag Response " + tagResponse.toString());
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1a7x1bi</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vv9lkb</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_1kk75jn" name="Update RiteHorizon">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('mendixUrl'); 
+var url = adapterUrl + '/tolltagwebservice/v1/tag/cancelRequest';
+java.lang.System.out.println(url);     
+url;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = execution.getVariable('tagResponse');
+java.lang.System.out.println('Update Rite Side');
+var tags = tagResponse.prop('tags');
+for ( var index in tags.elements()){
+    var tag = tags.elements().get(index);
+    java.lang.System.out.println(tag);
+    tag.prop('tagStatus','Cancel');
+}
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0a0v68s</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1a7x1bi</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1wz3utb">
+      <bpmn:incoming>SequenceFlow_0tlvp09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:businessRuleTask id="BusinessRuleTask_00ltt4q" name="Account Fees Business Rule" camunda:resultVariable="autoCharges" camunda:decisionRef="accountFees">
+      <bpmn:incoming>SequenceFlow_18ti238</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_15owkoc</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1jatppv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18y5zde</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="UserTask_07883av" name="Review Auto Charge">
+      <bpmn:incoming>SequenceFlow_1tprhn7</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1kl7fij</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1nb2ytq</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="ScriptTask_18c4c3q" name="Check Auto Charges" scriptFormat="JavaScript">
+      <bpmn:incoming>SequenceFlow_18y5zde</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1rakbtb</bpmn:outgoing>
+      <bpmn:script>var autoCharges = execution.getVariable('autoCharges');
+var vehicleCount = execution.getVariable('vehicleCount');
+var autoChargeAmts = autoCharges.get(0);
+var lotSize = autoChargeAmts.get('lotSize');
+var initialPrepaidBal = java.lang.Math.ceil(java.lang.Double.valueOf(vehicleCount)/java.lang.Double.valueOf(lotSize)) * autoChargeAmts.get('rebillAmount');
+
+var minLowBalance= java.lang.Math.ceil(java.lang.Double.valueOf(vehicleCount)/java.lang.Double.valueOf(lotSize)) * autoChargeAmts.get('lowBalance');
+
+java.lang.System.out.println('Auto Charge Calculation');
+
+
+execution.setVariableLocal("rebillAmount",autoChargeAmts.get('rebillAmount'));
+execution.setVariableLocal("lowBalance",autoChargeAmts.get('lowBalance') );
+
+execution.setVariableLocal("minLowBalance",minLowBalance);
+execution.setVariableLocal("initialPrepaidBalance",initialPrepaidBal);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_02vsntj">
+      <bpmn:incoming>SequenceFlow_0thb600</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vzjrn8</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1tprhn7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0iws3kv">
+      <bpmn:incoming>SequenceFlow_05wpf44</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_19fnzro</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1cmumjk</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_036541k">
+      <bpmn:incoming>SequenceFlow_1nb2ytq</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_15owkoc</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1lef5lq</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1ssl7z8">
+      <bpmn:incoming>SequenceFlow_0v7ntn8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1sa66ml</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0v8kw5u</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1kcuvrj</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ognhpb</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_170yfec" name="Remove Tags">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/fulfillment/removeProposedTags';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = execution.getVariable('tagResponse');
+java.lang.System.out.println('Update Rite Side');
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1kcuvrj</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0cs4rrm</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1us0s44</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0qswbty</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1rb5zau">
+      <bpmn:incoming>SequenceFlow_0ognhpb</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_0wu72vw" name="Remove Tags">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/fulfillment/removeProposedTags';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = execution.getVariable('tagResponse');
+java.lang.System.out.println('Remove Tags');
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0bzym38</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1kl7fij</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1vce06s">
+      <bpmn:incoming>SequenceFlow_11ehjl5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0sbrmfd</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0bzym38</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_0h0jcjw">
+      <bpmn:incoming>SequenceFlow_0qswbty</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_105giah">
+      <bpmn:incoming>SequenceFlow_1adlbm7</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1jb4vpj</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1us0s44</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0h199x1">
+      <bpmn:incoming>SequenceFlow_1rgyy6p</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0v7ntn8</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1i0kfpy</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ServiceTask_1c03qrx" name="Remove Tags">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/fulfillment/removeProposedTags';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var tagResponse = execution.getVariable('tagResponse');
+java.lang.System.out.println('Update Rite Side');
+tagResponse.toString();</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1i0kfpy</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1jatppv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1ttjqa1">
+      <bpmn:incoming>SequenceFlow_1cmumjk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="UserTask_0mifb59" name="Review Non Revenue Request" camunda:candidateGroups="rhCSR_Supervisor,rhAdministrator">
+      <bpmn:incoming>SequenceFlow_1s6dxuv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vuxfqi</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0fexm1u">
+      <bpmn:incoming>SequenceFlow_0ehu3t3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1kudf0q</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1s6dxuv</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_01gyks3">
+      <bpmn:incoming>SequenceFlow_0vuxfqi</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1r4npw9</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ohkm4w</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_1oxfy7i">
+      <bpmn:incoming>SequenceFlow_1r4npw9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_16zwpaa" name="Collect Tag Changes">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/collectTagForAccountSetup';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var price=execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var shiftId=execution.getVariable("shiftId");
+var paramForCheckout=execution.getVariable("paramForCheckout");
+var rebillAmount=execution.getVariable("rebillAmount");
+var lowBalanceLevel=execution.getVariable("lowBalance");
+var initialPrepaidBalance=execution.getVariable("initialPrepaidBalance");
+var tagNode=execution.getVariable("tagNode");
+java.lang.System.out.println("Collect Tag Changes");
+var message='{'
+   +'"accountId":'+accountId+ ','
+   +'"fulfillmentCase":false,'
+   +'"paramForCheckout":"'+paramForCheckout+ '",'
+   +'"rebillAmount":'+rebillAmount+','
+   +'"lowBalanceLevel":'+lowBalanceLevel+','
+   +'"initialPrepaidBalance":'+initialPrepaidBalance+','
+   +'"aDTOs":'+tagNode.toString()+','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'   
+    +'}'
++'}';
+java.lang.System.out.println(message);
+message;</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1ohkm4w</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vtoetj</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_15wh0t0" name="OneStep Checkout Payment">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/account/processTagFulfillmentOneStepCheck';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var accountId=execution.getVariable("accountId");
+var price=execution.getVariable("totalPayment");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationId");
+var shiftId=execution.getVariable("shiftId");
+var tagNode=execution.getVariable("tagNode");
+var paramForCheckout=execution.getVariable("paramForCheckout");                
+java.lang.System.out.println("One Time Payment");
+var message='{'
+   +'"accountId":'+accountId+ ','
+   +'"fulfillmentCase":false,'
+   +'"paramForCheckout":"'+paramForCheckout+ '",'
+   +'"aDTOs":'+tagNode.toString()+ ','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationId +'"'   
+    +'}'
++'}';
+java.lang.System.out.println(message);
+
+message;</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="hasError">
+              <camunda:script scriptFormat="JavaScript">S(response).fieldNames().contains('errorMessage');</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptData">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptData = !hasError ? S(response).prop('receiptData') : null;
+receiptData;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="receiptDate">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var receiptDate = !hasError ? S(response).prop('detail').prop('receiptDate').stringValue() : null;
+receiptDate;</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="cartId">
+              <camunda:script scriptFormat="JavaScript">var hasError = S(response).fieldNames().contains('errorMessage');                                 
+var cartId = !hasError ? S(response).prop('detail').prop('cartId').numberValue() : null;
+cartId;</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1vtoetj</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0nshfrt</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_0qv51ys">
+      <bpmn:incoming>SequenceFlow_0nshfrt</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0aojdvh" attachedToRef="ServiceTask_04lim1g">
+      <bpmn:outgoing>SequenceFlow_0cs4rrm</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0pc1ati" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0b7vw6b" attachedToRef="ServiceTask_0jcorv4">
+      <bpmn:outgoing>SequenceFlow_0tlvp09</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1938mrc" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_18ti238" sourceRef="StartEvent_0mdqq7n" targetRef="BusinessRuleTask_00ltt4q" />
+    <bpmn:sequenceFlow id="SequenceFlow_1vzjrn8" sourceRef="ExclusiveGateway_02vsntj" targetRef="ServiceTask_04lim1g">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var proposedAccount = execution.getVariable("proposedAccount");
+var reviewAutoCharge= execution.getVariable("reviewAutoCharge");
+
+var callSaveTag = proposedAccount==false || (reviewAutoCharge != null &amp;&amp; reviewAutoCharge==false);
+
+java.lang.System.out.println('Call Save Tag Service ? ' + callSaveTag);
+callSaveTag;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ehu3t3" sourceRef="ServiceTask_04lim1g" targetRef="ExclusiveGateway_0fexm1u" />
+    <bpmn:sequenceFlow id="SequenceFlow_0zibxsi" sourceRef="ServiceTask_1997tb6" targetRef="ExclusiveGateway_17xg7bk" />
+    <bpmn:sequenceFlow id="SequenceFlow_1qp4pv6" name="Payment is required ?" sourceRef="ExclusiveGateway_17xg7bk" targetRef="ExclusiveGateway_1my0vjt">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentRequired==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_05wpf44" name="Apply from Account Balance" sourceRef="ExclusiveGateway_17xg7bk" targetRef="ExclusiveGateway_0iws3kv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentRequired==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1kudf0q" sourceRef="ExclusiveGateway_0fexm1u" targetRef="ServiceTask_1997tb6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var planCode = execution.getVariable('planCode');
+planCode != null &amp;&amp; planCode != 'NR';</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0w7lfgh" sourceRef="ExclusiveGateway_0jgczjw" targetRef="UserTask_0scbm6s">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proposedAccount==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_00cr8gt" sourceRef="ServiceTask_10fwvy7" targetRef="UserTask_0scbm6s" />
+    <bpmn:sequenceFlow id="SequenceFlow_0sau2bc" sourceRef="ExclusiveGateway_1my0vjt" targetRef="UserTask_0scbm6s">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proposedAccount==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1rgyy6p" sourceRef="UserTask_0scbm6s" targetRef="ExclusiveGateway_0h199x1" />
+    <bpmn:sequenceFlow id="SequenceFlow_1sa66ml" sourceRef="ExclusiveGateway_1ssl7z8" targetRef="ServiceTask_1wubu7n">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var action= execution.getVariable("action");
+
+action==null;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_11ehjl5" sourceRef="ServiceTask_1wubu7n" targetRef="ExclusiveGateway_1vce06s" />
+    <bpmn:sequenceFlow id="SequenceFlow_19fnzro" name="Cart Item is not empty" sourceRef="ExclusiveGateway_0iws3kv" targetRef="ServiceTask_0amrq1w">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${cartItemSize&gt;0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ye1bfp" sourceRef="ServiceTask_0amrq1w" targetRef="ExclusiveGateway_0jgczjw" />
+    <bpmn:sequenceFlow id="SequenceFlow_1vv9lkb" sourceRef="ServiceTask_007r5ad" targetRef="EndEvent_0vthtln" />
+    <bpmn:sequenceFlow id="SequenceFlow_0v8kw5u" sourceRef="ExclusiveGateway_1ssl7z8" targetRef="ServiceTask_0v81i7o">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var action= execution.getVariable("action");
+action=='cancelFulfillment';</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0a0v68s" sourceRef="ServiceTask_0v81i7o" targetRef="ServiceTask_1kk75jn" />
+    <bpmn:sequenceFlow id="SequenceFlow_1jb4vpj" sourceRef="ExclusiveGateway_105giah" targetRef="ServiceTask_0jcorv4">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasError==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0sbrmfd" sourceRef="ExclusiveGateway_1vce06s" targetRef="ServiceTask_0jcorv4">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasError==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1hp8x9n" sourceRef="ServiceTask_0jcorv4" targetRef="EndEvent_0sqbqbq" />
+    <bpmn:sequenceFlow id="SequenceFlow_1adlbm7" sourceRef="ExclusiveGateway_0jgczjw" targetRef="ExclusiveGateway_105giah">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proposedAccount==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ddvu40" sourceRef="ExclusiveGateway_1my0vjt" targetRef="ServiceTask_10fwvy7">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proposedAccount==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1a7x1bi" sourceRef="ServiceTask_1kk75jn" targetRef="ServiceTask_007r5ad" />
+    <bpmn:sequenceFlow id="SequenceFlow_0tlvp09" sourceRef="BoundaryEvent_0b7vw6b" targetRef="EndEvent_1wz3utb" />
+    <bpmn:sequenceFlow id="SequenceFlow_15owkoc" sourceRef="ExclusiveGateway_036541k" targetRef="BusinessRuleTask_00ltt4q">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewAutoCharge==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1jatppv" sourceRef="ServiceTask_1c03qrx" targetRef="BusinessRuleTask_00ltt4q" />
+    <bpmn:sequenceFlow id="SequenceFlow_18y5zde" sourceRef="BusinessRuleTask_00ltt4q" targetRef="ScriptTask_18c4c3q" />
+    <bpmn:sequenceFlow id="SequenceFlow_1tprhn7" sourceRef="ExclusiveGateway_02vsntj" targetRef="UserTask_07883av">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proposedAccount==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1kl7fij" sourceRef="ServiceTask_0wu72vw" targetRef="UserTask_07883av" />
+    <bpmn:sequenceFlow id="SequenceFlow_1nb2ytq" sourceRef="UserTask_07883av" targetRef="ExclusiveGateway_036541k" />
+    <bpmn:sequenceFlow id="SequenceFlow_1cmumjk" sourceRef="ExclusiveGateway_0iws3kv" targetRef="EndEvent_1ttjqa1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${cartItemSize==0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0v7ntn8" sourceRef="ExclusiveGateway_0h199x1" targetRef="ExclusiveGateway_1ssl7z8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewAutoCharge==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1kcuvrj" sourceRef="ExclusiveGateway_1ssl7z8" targetRef="ServiceTask_170yfec">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var action= execution.getVariable("action");
+action=='removeProposedTags';</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ognhpb" sourceRef="ExclusiveGateway_1ssl7z8" targetRef="EndEvent_1rb5zau">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var action= execution.getVariable("action");
+action=='error';</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0cs4rrm" sourceRef="BoundaryEvent_0aojdvh" targetRef="ServiceTask_170yfec" />
+    <bpmn:sequenceFlow id="SequenceFlow_1us0s44" sourceRef="ExclusiveGateway_105giah" targetRef="ServiceTask_170yfec">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasError==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0qswbty" sourceRef="ServiceTask_170yfec" targetRef="EndEvent_0h0jcjw" />
+    <bpmn:sequenceFlow id="SequenceFlow_0bzym38" sourceRef="ExclusiveGateway_1vce06s" targetRef="ServiceTask_0wu72vw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasError==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1i0kfpy" sourceRef="ExclusiveGateway_0h199x1" targetRef="ServiceTask_1c03qrx">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewAutoCharge==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1s6dxuv" sourceRef="ExclusiveGateway_0fexm1u" targetRef="UserTask_0mifb59">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${planCode=='NR'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0vuxfqi" sourceRef="UserTask_0mifb59" targetRef="ExclusiveGateway_01gyks3" />
+    <bpmn:sequenceFlow id="SequenceFlow_1r4npw9" sourceRef="ExclusiveGateway_01gyks3" targetRef="EndEvent_1oxfy7i">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ohkm4w" sourceRef="ExclusiveGateway_01gyks3" targetRef="ServiceTask_16zwpaa">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1vtoetj" sourceRef="ServiceTask_16zwpaa" targetRef="ServiceTask_15wh0t0" />
+    <bpmn:sequenceFlow id="SequenceFlow_0nshfrt" sourceRef="ServiceTask_15wh0t0" targetRef="EndEvent_0qv51ys" />
+    <bpmn:sequenceFlow id="SequenceFlow_1rakbtb" sourceRef="ScriptTask_18c4c3q" targetRef="CallActivity_148mf03" />
+    <bpmn:sequenceFlow id="SequenceFlow_1lef5lq" sourceRef="ExclusiveGateway_036541k" targetRef="CallActivity_1tdek7n" />
+    <bpmn:callActivity id="CallActivity_148mf03" name="Fee Calculation" calledElement="feeCalculation">
+      <bpmn:extensionElements>
+        <camunda:in source="saveVehicleChangeRequest" target="saveVehicleChangeRequest" />
+        <camunda:out source="saveVehicleChangeRequest" target="saveVehicleChangeRequest" />
+        <camunda:in source="currentTagCount" target="currentTagCount" />
+        <camunda:out source="tagNode" target="tagNode" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1rakbtb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0thb600</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="SequenceFlow_0thb600" sourceRef="CallActivity_148mf03" targetRef="ExclusiveGateway_02vsntj" />
+    <bpmn:callActivity id="CallActivity_1tdek7n" name="Fee Calculation" calledElement="feeCalculation">
+      <bpmn:extensionElements>
+        <camunda:in source="saveVehicleChangeRequest" target="saveVehicleChangeRequest" />
+        <camunda:out source="saveVehicleChangeRequest" target="saveVehicleChangeRequest" />
+        <camunda:in source="currentTagCount" target="currentTagCount" />
+        <camunda:out source="tagNode" target="tagNode" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1lef5lq</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0w7u9jb</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="SequenceFlow_0w7u9jb" sourceRef="CallActivity_1tdek7n" targetRef="ServiceTask_04lim1g" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TagVehicleActivation">
+      <bpmndi:BPMNShape id="StartEvent_0mdqq7n_di" bpmnElement="StartEvent_0mdqq7n">
+        <dc:Bounds x="-110" y="-344" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_04lim1g_di" bpmnElement="ServiceTask_04lim1g">
+        <dc:Bounds x="869" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_17xg7bk_di" bpmnElement="ExclusiveGateway_17xg7bk" isMarkerVisible="true">
+        <dc:Bounds x="967" y="168" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1997tb6_di" bpmnElement="ServiceTask_1997tb6">
+        <dc:Bounds x="942" y="-58" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0scbm6s_di" bpmnElement="UserTask_0scbm6s">
+        <dc:Bounds x="1313" y="153" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1wubu7n_di" bpmnElement="ServiceTask_1wubu7n">
+        <dc:Bounds x="1626" y="153" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0amrq1w_di" bpmnElement="ServiceTask_0amrq1w">
+        <dc:Bounds x="1172" y="424" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0vthtln_di" bpmnElement="EndEvent_0vthtln">
+        <dc:Bounds x="546" y="740" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0v81i7o_di" bpmnElement="ServiceTask_0v81i7o">
+        <dc:Bounds x="514" y="322" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0jcorv4_di" bpmnElement="ServiceTask_0jcorv4">
+        <dc:Bounds x="2076" y="153" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0jgczjw_di" bpmnElement="ExclusiveGateway_0jgczjw" isMarkerVisible="true">
+        <dc:Bounds x="1338" y="439" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_10fwvy7_di" bpmnElement="ServiceTask_10fwvy7">
+        <dc:Bounds x="1188" y="6" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0sqbqbq_di" bpmnElement="EndEvent_0sqbqbq">
+        <dc:Bounds x="2362" y="175" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1my0vjt_di" bpmnElement="ExclusiveGateway_1my0vjt" isMarkerVisible="true">
+        <dc:Bounds x="1082" y="168" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_007r5ad_di" bpmnElement="ServiceTask_007r5ad">
+        <dc:Bounds x="514" y="594" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1kk75jn_di" bpmnElement="ServiceTask_1kk75jn">
+        <dc:Bounds x="514" y="464" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1wz3utb_di" bpmnElement="EndEvent_1wz3utb">
+        <dc:Bounds x="2362" y="-24" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_00ltt4q_di" bpmnElement="BusinessRuleTask_00ltt4q">
+        <dc:Bounds x="-24" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_07883av_di" bpmnElement="UserTask_07883av">
+        <dc:Bounds x="485" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_18c4c3q_di" bpmnElement="ScriptTask_18c4c3q">
+        <dc:Bounds x="111" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_02vsntj_di" bpmnElement="ExclusiveGateway_02vsntj" isMarkerVisible="true">
+        <dc:Bounds x="409" y="-351" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0iws3kv_di" bpmnElement="ExclusiveGateway_0iws3kv" isMarkerVisible="true">
+        <dc:Bounds x="967" y="439" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_036541k_di" bpmnElement="ExclusiveGateway_036541k" isMarkerVisible="true">
+        <dc:Bounds x="620" y="-351" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ssl7z8_di" bpmnElement="ExclusiveGateway_1ssl7z8" isMarkerVisible="true">
+        <dc:Bounds x="1551" y="168" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_170yfec_di" bpmnElement="ServiceTask_170yfec">
+        <dc:Bounds x="1651" y="-352" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1rb5zau_di" bpmnElement="EndEvent_1rb5zau">
+        <dc:Bounds x="1876" y="-244" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0wu72vw_di" bpmnElement="ServiceTask_0wu72vw">
+        <dc:Bounds x="1582" y="296" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1vce06s_di" bpmnElement="ExclusiveGateway_1vce06s" isMarkerVisible="true">
+        <dc:Bounds x="1756" y="168" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0h0jcjw_di" bpmnElement="EndEvent_0h0jcjw">
+        <dc:Bounds x="1876" y="-330" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_105giah_di" bpmnElement="ExclusiveGateway_105giah" isMarkerVisible="true">
+        <dc:Bounds x="1756" y="439" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0h199x1_di" bpmnElement="ExclusiveGateway_0h199x1" isMarkerVisible="true">
+        <dc:Bounds x="1455" y="168" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1c03qrx_di" bpmnElement="ServiceTask_1c03qrx">
+        <dc:Bounds x="766" y="244" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1ttjqa1_di" bpmnElement="EndEvent_1ttjqa1">
+        <dc:Bounds x="974" y="600" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0mifb59_di" bpmnElement="UserTask_0mifb59">
+        <dc:Bounds x="1025" y="-581" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0fexm1u_di" bpmnElement="ExclusiveGateway_0fexm1u" isMarkerVisible="true">
+        <dc:Bounds x="1050" y="-213" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_01gyks3_di" bpmnElement="ExclusiveGateway_01gyks3" isMarkerVisible="true">
+        <dc:Bounds x="1213" y="-566" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1oxfy7i_di" bpmnElement="EndEvent_1oxfy7i">
+        <dc:Bounds x="1387" y="-559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_16zwpaa_di" bpmnElement="ServiceTask_16zwpaa">
+        <dc:Bounds x="1188" y="-461" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_15wh0t0_di" bpmnElement="ServiceTask_15wh0t0">
+        <dc:Bounds x="1386" y="-461" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0qv51ys_di" bpmnElement="EndEvent_0qv51ys">
+        <dc:Bounds x="1584" y="-439" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0aojdvh_di" bpmnElement="BoundaryEvent_0aojdvh">
+        <dc:Bounds x="951" y="-304" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0b7vw6b_di" bpmnElement="BoundaryEvent_0b7vw6b">
+        <dc:Bounds x="2117" y="135" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18ti238_di" bpmnElement="SequenceFlow_18ti238">
+        <di:waypoint x="-74" y="-326" />
+        <di:waypoint x="-24" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vzjrn8_di" bpmnElement="SequenceFlow_1vzjrn8">
+        <di:waypoint x="434" y="-351" />
+        <di:waypoint x="434" y="-518" />
+        <di:waypoint x="919" y="-518" />
+        <di:waypoint x="919" y="-366" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ehu3t3_di" bpmnElement="SequenceFlow_0ehu3t3">
+        <di:waypoint x="919" y="-282" />
+        <di:waypoint x="919" y="-188" />
+        <di:waypoint x="1050" y="-188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0zibxsi_di" bpmnElement="SequenceFlow_0zibxsi">
+        <di:waypoint x="992" y="22" />
+        <di:waypoint x="992" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1qp4pv6_di" bpmnElement="SequenceFlow_1qp4pv6">
+        <di:waypoint x="1017" y="193" />
+        <di:waypoint x="1082" y="193" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1015.5" y="155" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_05wpf44_di" bpmnElement="SequenceFlow_05wpf44">
+        <di:waypoint x="992" y="218" />
+        <di:waypoint x="992" y="439" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1004" y="290.5" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kudf0q_di" bpmnElement="SequenceFlow_1kudf0q">
+        <di:waypoint x="1075" y="-163" />
+        <di:waypoint x="1075" y="-18" />
+        <di:waypoint x="1042" y="-18" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0w7lfgh_di" bpmnElement="SequenceFlow_0w7lfgh">
+        <di:waypoint x="1363" y="439" />
+        <di:waypoint x="1363" y="233" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_00cr8gt_di" bpmnElement="SequenceFlow_00cr8gt">
+        <di:waypoint x="1288" y="46" />
+        <di:waypoint x="1363" y="46" />
+        <di:waypoint x="1363" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0sau2bc_di" bpmnElement="SequenceFlow_0sau2bc">
+        <di:waypoint x="1132" y="193" />
+        <di:waypoint x="1313" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rgyy6p_di" bpmnElement="SequenceFlow_1rgyy6p">
+        <di:waypoint x="1413" y="193" />
+        <di:waypoint x="1455" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1sa66ml_di" bpmnElement="SequenceFlow_1sa66ml">
+        <di:waypoint x="1601" y="193" />
+        <di:waypoint x="1626" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11ehjl5_di" bpmnElement="SequenceFlow_11ehjl5">
+        <di:waypoint x="1726" y="193" />
+        <di:waypoint x="1756" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_19fnzro_di" bpmnElement="SequenceFlow_19fnzro">
+        <di:waypoint x="1017" y="464" />
+        <di:waypoint x="1172" y="464" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1045.5" y="477" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ye1bfp_di" bpmnElement="SequenceFlow_0ye1bfp">
+        <di:waypoint x="1272" y="464" />
+        <di:waypoint x="1338" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vv9lkb_di" bpmnElement="SequenceFlow_1vv9lkb">
+        <di:waypoint x="564" y="674" />
+        <di:waypoint x="564" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0v8kw5u_di" bpmnElement="SequenceFlow_0v8kw5u">
+        <di:waypoint x="1576" y="218" />
+        <di:waypoint x="1576" y="362" />
+        <di:waypoint x="614" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0a0v68s_di" bpmnElement="SequenceFlow_0a0v68s">
+        <di:waypoint x="564" y="402" />
+        <di:waypoint x="564" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jb4vpj_di" bpmnElement="SequenceFlow_1jb4vpj">
+        <di:waypoint x="1806" y="464" />
+        <di:waypoint x="2126" y="464" />
+        <di:waypoint x="2126" y="233" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0sbrmfd_di" bpmnElement="SequenceFlow_0sbrmfd">
+        <di:waypoint x="1806" y="193" />
+        <di:waypoint x="2076" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1hp8x9n_di" bpmnElement="SequenceFlow_1hp8x9n">
+        <di:waypoint x="2176" y="193" />
+        <di:waypoint x="2362" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1adlbm7_di" bpmnElement="SequenceFlow_1adlbm7">
+        <di:waypoint x="1388" y="464" />
+        <di:waypoint x="1756" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ddvu40_di" bpmnElement="SequenceFlow_0ddvu40">
+        <di:waypoint x="1107" y="168" />
+        <di:waypoint x="1107" y="63" />
+        <di:waypoint x="1107" y="46" />
+        <di:waypoint x="1188" y="46" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1a7x1bi_di" bpmnElement="SequenceFlow_1a7x1bi">
+        <di:waypoint x="564" y="544" />
+        <di:waypoint x="564" y="594" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0tlvp09_di" bpmnElement="SequenceFlow_0tlvp09">
+        <di:waypoint x="2135" y="135" />
+        <di:waypoint x="2135" y="-6" />
+        <di:waypoint x="2362" y="-6" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_15owkoc_di" bpmnElement="SequenceFlow_15owkoc">
+        <di:waypoint x="645" y="-301" />
+        <di:waypoint x="645" y="-188" />
+        <di:waypoint x="26" y="-188" />
+        <di:waypoint x="26" y="-286" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jatppv_di" bpmnElement="SequenceFlow_1jatppv">
+        <di:waypoint x="766" y="284" />
+        <di:waypoint x="47" y="284" />
+        <di:waypoint x="47" y="-286" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_18y5zde_di" bpmnElement="SequenceFlow_18y5zde">
+        <di:waypoint x="76" y="-326" />
+        <di:waypoint x="111" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1tprhn7_di" bpmnElement="SequenceFlow_1tprhn7">
+        <di:waypoint x="459" y="-326" />
+        <di:waypoint x="485" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kl7fij_di" bpmnElement="SequenceFlow_1kl7fij">
+        <di:waypoint x="1632" y="376" />
+        <di:waypoint x="1632" y="874" />
+        <di:waypoint x="503" y="874" />
+        <di:waypoint x="503" y="-286" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1nb2ytq_di" bpmnElement="SequenceFlow_1nb2ytq">
+        <di:waypoint x="585" y="-326" />
+        <di:waypoint x="620" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1cmumjk_di" bpmnElement="SequenceFlow_1cmumjk">
+        <di:waypoint x="992" y="489" />
+        <di:waypoint x="992" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0v7ntn8_di" bpmnElement="SequenceFlow_0v7ntn8">
+        <di:waypoint x="1505" y="193" />
+        <di:waypoint x="1551" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kcuvrj_di" bpmnElement="SequenceFlow_1kcuvrj">
+        <di:waypoint x="1576" y="168" />
+        <di:waypoint x="1576" y="-334" />
+        <di:waypoint x="1651" y="-334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ognhpb_di" bpmnElement="SequenceFlow_0ognhpb">
+        <di:waypoint x="1587" y="179" />
+        <di:waypoint x="1883" y="-211" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cs4rrm_di" bpmnElement="SequenceFlow_0cs4rrm">
+        <di:waypoint x="987" y="-286" />
+        <di:waypoint x="1651" y="-286" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1us0s44_di" bpmnElement="SequenceFlow_1us0s44">
+        <di:waypoint x="1781" y="489" />
+        <di:waypoint x="1781" y="566" />
+        <di:waypoint x="1701" y="566" />
+        <di:waypoint x="1701" y="-268" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0qswbty_di" bpmnElement="SequenceFlow_0qswbty">
+        <di:waypoint x="1751" y="-312" />
+        <di:waypoint x="1876" y="-312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bzym38_di" bpmnElement="SequenceFlow_0bzym38">
+        <di:waypoint x="1781" y="218" />
+        <di:waypoint x="1781" y="336" />
+        <di:waypoint x="1682" y="336" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i0kfpy_di" bpmnElement="SequenceFlow_1i0kfpy">
+        <di:waypoint x="1480" y="218" />
+        <di:waypoint x="1480" y="284" />
+        <di:waypoint x="866" y="284" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1s6dxuv_di" bpmnElement="SequenceFlow_1s6dxuv">
+        <di:waypoint x="1075" y="-213" />
+        <di:waypoint x="1075" y="-501" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vuxfqi_di" bpmnElement="SequenceFlow_0vuxfqi">
+        <di:waypoint x="1125" y="-541" />
+        <di:waypoint x="1213" y="-541" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1r4npw9_di" bpmnElement="SequenceFlow_1r4npw9">
+        <di:waypoint x="1263" y="-541" />
+        <di:waypoint x="1387" y="-541" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ohkm4w_di" bpmnElement="SequenceFlow_1ohkm4w">
+        <di:waypoint x="1238" y="-516" />
+        <di:waypoint x="1238" y="-461" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vtoetj_di" bpmnElement="SequenceFlow_1vtoetj">
+        <di:waypoint x="1288" y="-421" />
+        <di:waypoint x="1386" y="-421" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0nshfrt_di" bpmnElement="SequenceFlow_0nshfrt">
+        <di:waypoint x="1486" y="-421" />
+        <di:waypoint x="1584" y="-421" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rakbtb_di" bpmnElement="SequenceFlow_1rakbtb">
+        <di:waypoint x="211" y="-326" />
+        <di:waypoint x="262" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1lef5lq_di" bpmnElement="SequenceFlow_1lef5lq">
+        <di:waypoint x="670" y="-326" />
+        <di:waypoint x="702" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_148mf03_di" bpmnElement="CallActivity_148mf03">
+        <dc:Bounds x="262" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0thb600_di" bpmnElement="SequenceFlow_0thb600">
+        <di:waypoint x="362" y="-326" />
+        <di:waypoint x="409" y="-326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_1tdek7n_di" bpmnElement="CallActivity_1tdek7n">
+        <dc:Bounds x="702" y="-366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0w7u9jb_di" bpmnElement="SequenceFlow_0w7u9jb">
+        <di:waypoint x="802" y="-326" />
+        <di:waypoint x="869" y="-326" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

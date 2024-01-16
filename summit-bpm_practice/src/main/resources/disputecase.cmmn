@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmmn:definitions xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI" xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/cmmn" id="Definitions_1aq9yjw" targetNamespace="http://bpmn.io/schema/cmmn" exporter="Camunda Modeler" exporterVersion="1.16.0">
+  <cmmn:case id="disputecase" name="disputecase">
+    <cmmn:casePlanModel id="CasePlanModel_1" name="DisputeCase" autoComplete="true">
+      <cmmn:planItem id="PlanItem_1" name="LoadDocuments" definitionRef="HumanTask_17jjqh2" />
+      <cmmn:planItem id="PlanItem_0go611v" definitionRef="HumanTask_1m2wsvt" />
+      <cmmn:humanTask id="HumanTask_17jjqh2" name="CSR Initiated" camunda:assignee="admin" />
+      <cmmn:humanTask id="HumanTask_1m2wsvt" name="Are All Documents Loaded?" />
+    </cmmn:casePlanModel>
+  </cmmn:case>
+  <cmmndi:CMMNDI>
+    <cmmndi:CMMNDiagram id="_5a66685b-5f57-4e2f-b1d1-acca4fae04b2" name="Manage Dispute Case">
+      <cmmndi:Size width="500" height="500" />
+      <cmmndi:CMMNShape id="DI_CasePlanModel_1" cmmnElementRef="CasePlanModel_1">
+        <dc:Bounds x="484" y="170" width="443" height="365" />
+        <cmmndi:CMMNLabel />
+      </cmmndi:CMMNShape>
+      <cmmndi:CMMNShape id="PlanItem_1vj0oun_di" cmmnElementRef="PlanItem_1">
+        <dc:Bounds x="562" y="219" width="100" height="80" />
+        <cmmndi:CMMNLabel />
+      </cmmndi:CMMNShape>
+      <cmmndi:CMMNShape id="PlanItem_019k0yi_di" cmmnElementRef="PlanItem_0go611v">
+        <dc:Bounds x="562" y="340" width="100" height="80" />
+        <cmmndi:CMMNLabel />
+      </cmmndi:CMMNShape>
+    </cmmndi:CMMNDiagram>
+  </cmmndi:CMMNDI>
+</cmmn:definitions>

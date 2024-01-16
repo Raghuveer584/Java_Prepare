@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1giws2a" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.16.0">
+  <bpmn:process id="Refunds" isExecutable="true">
+    <bpmn:startEvent id="Refund" name="refund&#10;&#10;">
+      <bpmn:outgoing>SequenceFlow_1u7nx5y</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_12igw1w" name="Automatic Approved">
+      <bpmn:incoming>SequenceFlow_1i0v0i3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0zdx7bf</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_11r7k4i</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_1xbec1n">
+      <bpmn:incoming>Flow_1f0eoea</bpmn:incoming>
+      <bpmn:incoming>Flow_1qdlrbl</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_11pxlj1">
+      <bpmn:incoming>SequenceFlow_1yweqjw</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_15f74a1</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_14lc1q3</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0xpfr4s</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:businessRuleTask id="BusinessRuleTask_17z45dm" name="Refund Decisions" camunda:resultVariable="approval" camunda:decisionRef="Refunds" camunda:mapDecisionResult="singleEntry">
+      <bpmn:incoming>SequenceFlow_1u7nx5y</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_123t5bc</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="UserTask_1oozcnv" name="Review  Approval Queue" camunda:candidateGroups="rhAdministrator,rhAsst_Director,rhCSC_Manager,rhCSC_Asst_Manager,rhFin_Manager">
+      <bpmn:documentation>Review Refund Queue</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_18gcvhm</bpmn:incoming>
+      <bpmn:incoming>Flow_1juvite</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_149aijn</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1u7nx5y" sourceRef="Refund" targetRef="BusinessRuleTask_17z45dm" />
+    <bpmn:sequenceFlow id="SequenceFlow_0zdx7bf" name="Automatic Approval Refund" sourceRef="ExclusiveGateway_12igw1w" targetRef="ServiceTask_1hf3w0t">
+      <bpmn:documentation>Not Approval Keep the Account Pending</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_149aijn" sourceRef="UserTask_1oozcnv" targetRef="ExclusiveGateway_1udxg5a" />
+    <bpmn:serviceTask id="ServiceTask_0ao714c" name="Create Refund Record in Rite">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/createRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var paymentId=execution.getVariable("paymentId");
+var paymentAmount=execution.getVariable("paymentAmount");
+var accountId=execution.getVariable("accountId");
+var refundReasonCode=execution.getVariable("refundReasonCode");
+var personId=execution.getVariable("personId");
+var addressId=execution.getVariable("addressId");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationInfoId");
+var shiftId=execution.getVariable("shiftId");
+var selectedAddress=execution.getVariable("selectedAddress");
+var refundId=execution.getVariable("refundId");	
+var refundMode=execution.getVariable("refundMode");                
+var comment=execution.getVariable("comment"); 
+'{'
+   +'"accountId":"'+accountId+ '",'
+   +'"paymentId":"'+paymentId+ '",'
+   +'"paymentAmount":'+paymentAmount+ ','
+   +'"refundReasonCode":"'+refundReasonCode+ '",'
+   +'"selectedAddress":"'+selectedAddress+ '",'
+   +'"refundId":"'+refundId+ '",'
+   +'"refundMode":"'+refundMode+ '",'
+   +'"comments":"'+comment+ '",'
+   +'"shiftId":'+shiftId + ','  
+   +'"personId":'+personId + ','     
+   +'"addressId":'+addressId + ','    
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":'+locationId +','
+   +'"shiftId":'+shiftId             
+    +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="refundId">
+              <camunda:script scriptFormat="JavaScript">var system = java.lang.System;
+
+system.out.println('WsService Response' + response);
+
+S(response).prop('refundId').numberValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="refundDetailDTO">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_123t5bc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i0v0i3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_12c93t6" name="Process Refund">
+      <bpmn:documentation>Call Mendix Adapter to Process Refund</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); adapterUrl + '/unsecure/payment/approveRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var refundId=execution.getVariable("refundId");
+var shiftId=execution.getVariable("shiftId");
+var locationInfoId=execution.getVariable("locationInfoId");
+var userName=execution.getVariable("userName");
+var comments=execution.getVariable("comment");
+'{'
+   +'"refundId":"'+refundId+ '",'
+   +'"approvalOrDeny":true,'
+   +'"comments":"'+comments+ '",'
+   +'"userDTO": {'
+   +'"shiftId":"'+shiftId+ '",'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationInfoId+ '"'
+   +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="result">
+              <camunda:script scriptFormat="JavaScript">S(response).prop('result').stringValue();</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_15f74a1</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0fk30v3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0101ro2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1udxg5a">
+      <bpmn:incoming>SequenceFlow_149aijn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14bm1ht</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ghxih9</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1omw4u2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_1nl87u7">
+      <bpmn:incoming>SequenceFlow_0nzbs83</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_15f74a1" name="Approved by Supervisor" sourceRef="ExclusiveGateway_11pxlj1" targetRef="ServiceTask_12c93t6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='A'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="UserTask_0luto8e" name="Supervisor To approval Queuestst" camunda:candidateGroups="rhAdministrator,rhAsst_Director,rhCSC_Manager,rhCSC_Asst_Manager,rhFin_Manager">
+      <bpmn:documentation>Check why Accoun Creation Failed Or need to send again</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_1sc6pww</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1q32ips</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1yweqjw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_14lc1q3" name="Not Approved by Supervisor" sourceRef="ExclusiveGateway_11pxlj1" targetRef="ServiceTask_07a9q21">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='D'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ServiceTask_07a9q21" name="Denied Refund">
+      <bpmn:documentation>Call Mendix Adapter to Process Refund</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); adapterUrl + '/unsecure/payment/approveRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var refundId=execution.getVariable("refundId");
+var shiftId=execution.getVariable("shiftId");
+var locationInfoId=execution.getVariable("locationInfoId");
+var userName=execution.getVariable("userName");
+var comments=execution.getVariable("comment");
+'{'
+   +'"refundId":"'+refundId+ '",'
+   +'"approvalOrDeny":false,'
+   +'"comments":"'+comments+ '",'
+   +'"userDTO": {'
+   +'"shiftId":"'+shiftId+ '",'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationInfoId+ '"'
+   +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_14lc1q3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0nzbs83</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0nzbs83" sourceRef="ServiceTask_07a9q21" targetRef="EndEvent_1nl87u7" />
+    <bpmn:sequenceFlow id="SequenceFlow_14bm1ht" name="Escalate to Supervisor" sourceRef="ExclusiveGateway_1udxg5a" targetRef="ServiceTask_12iz7em">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='A'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ghxih9" sourceRef="ExclusiveGateway_1udxg5a" targetRef="ServiceTask_0fuv6xe">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='D'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ServiceTask_12iz7em" name="Mark Refund For Approval">
+      <bpmn:documentation>Call Mendix Adapter to Process Refund</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); adapterUrl + '/unsecure/payment/markReadyForApproval';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var system = java.lang.System;
+system.out.println('Mark Refund for Approval');
+
+var refundDTO=execution.getVariable("refundDetailDTO");
+var shiftId=execution.getVariable("shiftId");
+var locationInfoId=execution.getVariable("locationInfoId");
+var userName=execution.getVariable("userName");
+'{'
+   +'"refundDetailDTO":'+refundDTO+ ','
+   +'"userDTO": {'
+   +'"shiftId":"'+shiftId+ '",'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationInfoId+ '"'
+   +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_14bm1ht</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1sc6pww</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1sc6pww" sourceRef="ServiceTask_12iz7em" targetRef="UserTask_0luto8e" />
+    <bpmn:serviceTask id="ServiceTask_0fuv6xe" name="Cancel Refund in RITE">
+      <bpmn:documentation>Call Mendix Adapter to Process Refund</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); adapterUrl + '/unsecure/payment/cancelRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var paymentId=execution.getVariable("paymentId");
+var paymentAmount=execution.getVariable("paymentAmount");
+var accountId=execution.getVariable("accountId");
+var refundReasonCode=execution.getVariable("refundReasonCode");
+var personId=execution.getVariable("personId");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationInfoId");
+var shiftId=execution.getVariable("shiftId");
+var selectedAddress=execution.getVariable("selectedAddress");
+var refundId=execution.getVariable("refundId");	
+var refundMode=execution.getVariable("refundMode");                
+var comment=execution.getVariable("comment"); 
+'{'
+   +'"accountId":"'+accountId+ '",'
+   +'"paymentId":"'+paymentId+ '",'
+   +'"paymentAmount":'+paymentAmount+ ','
+   +'"refundReasonCode":"'+refundReasonCode+ '",'
+   +'"selectedAddress":"'+selectedAddress+ '",'
+   +'"refundId":"'+refundId+ '",'
+   +'"refundMode":"'+refundMode+ '",'
+   +'"comments":"'+comment+ '",'
+   +'"shiftId":'+shiftId + ','             
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":'+locationId +','
+   +'"shiftId":'+shiftId             
+    +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0ghxih9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0nbmnk9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ServiceTask_1hf3w0t" name="Mark Refund For Approval">
+      <bpmn:documentation>Call Mendix Adapter to Process Refund</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); adapterUrl + '/unsecure/payment/markReadyForApproval';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var refundDTO=execution.getVariable("refundDetailDTO");
+var shiftId=execution.getVariable("shiftId");
+var locationInfoId=execution.getVariable("locationInfoId");
+var userName=execution.getVariable("userName");
+'{'
+   +'"refundDetailDTO":'+refundDTO+ ','
+   +'"userDTO": {'
+   +'"shiftId":"'+shiftId+ '",'
+   +'"username":"'+userName+ '",'
+   +'"locationId":"'+locationInfoId+ '"'
+   +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0zdx7bf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0fk30v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0fk30v3" sourceRef="ServiceTask_1hf3w0t" targetRef="ServiceTask_12c93t6" />
+    <bpmn:sequenceFlow id="SequenceFlow_1i0v0i3" sourceRef="ServiceTask_0ao714c" targetRef="ExclusiveGateway_12igw1w" />
+    <bpmn:sequenceFlow id="SequenceFlow_123t5bc" sourceRef="BusinessRuleTask_17z45dm" targetRef="ServiceTask_0ao714c" />
+    <bpmn:endEvent id="EndEvent_08t5yyj">
+      <bpmn:incoming>SequenceFlow_0nbmnk9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0nbmnk9" sourceRef="ServiceTask_0fuv6xe" targetRef="EndEvent_08t5yyj" />
+    <bpmn:userTask id="Activity_0ztk4ol" name="Complete">
+      <bpmn:incoming>Flow_0r5567l</bpmn:incoming>
+      <bpmn:incoming>Flow_0uipphh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lwv4qr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_00v33up">
+      <bpmn:incoming>Flow_0101ro2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0r5567l</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1f0eoea</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0101ro2" sourceRef="ServiceTask_12c93t6" targetRef="Gateway_00v33up" />
+    <bpmn:sequenceFlow id="Flow_0r5567l" sourceRef="Gateway_00v33up" targetRef="Activity_0ztk4ol">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("refundMode")!='OTHERS'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1f0eoea" sourceRef="Gateway_00v33up" targetRef="EndEvent_1xbec1n">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("refundMode")=='END_EVENT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1omw4u2" sourceRef="ExclusiveGateway_1udxg5a" targetRef="Activity_0t15uw6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='S'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_0t15uw6" name="Update Refund Record in Rite">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/updateRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var paymentId=execution.getVariable("paymentId");
+var paymentAmount=execution.getVariable("paymentAmount");
+var accountId=execution.getVariable("accountId");
+var refundReasonCode=execution.getVariable("refundReasonCode");
+var personId=execution.getVariable("personId");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationInfoId");
+var shiftId=execution.getVariable("shiftId");
+var selectedAddress=execution.getVariable("selectedAddress");
+var refundId=execution.getVariable("refundId");	
+var refundMode=execution.getVariable("refundMode");                
+var comment=execution.getVariable("comment"); 
+var addressId=execution.getVariable("addressId"); 
+
+
+'{'
+   +'"accountId":"'+accountId+ '",'
+   +'"paymentId":"'+paymentId+ '",'
+   +'"paymentAmount":'+paymentAmount+ ','
+   +'"refundReasonCode":"'+refundReasonCode+ '",'
+   +'"selectedAddress":"'+selectedAddress+ '",'
+   +'"refundId":"'+refundId+ '",'
+   +'"refundMode":"",'
+   +'"comments":"'+comment+ '",'
+   +'"shiftId":'+shiftId + ','   
+   +'"personId":'+personId + ','   
+   +'"addressId":'+addressId + ','  
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":'+locationId +','
+   +'"shiftId":'+shiftId             
+    +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="refundId">
+              <camunda:script scriptFormat="JavaScript">var system = java.lang.System;
+
+system.out.println('WsService update refund Response' + response);
+
+S(response).prop('refundId').numberValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="refundDetailDTO">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1omw4u2</bpmn:incoming>
+      <bpmn:outgoing>Flow_1juvite</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1juvite" sourceRef="Activity_0t15uw6" targetRef="UserTask_1oozcnv" />
+    <bpmn:serviceTask id="Activity_1p6xbs8" name="Update Refund Record in Rite">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/updateRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var paymentId=execution.getVariable("paymentId");
+var paymentAmount=execution.getVariable("paymentAmount");
+var accountId=execution.getVariable("accountId");
+var refundReasonCode=execution.getVariable("refundReasonCode");
+var personId=execution.getVariable("personId");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationInfoId");
+var shiftId=execution.getVariable("shiftId");
+var selectedAddress=execution.getVariable("selectedAddress");
+var refundId=execution.getVariable("refundId");	
+var refundMode=execution.getVariable("refundMode");                
+var comment=execution.getVariable("comment"); 
+var checkNumber=execution.getVariable("checkNumber"); 
+var checkEnteredDate=execution.getVariable("checkEnteredDate"); 
+
+
+
+'{'
+   +'"accountId":"'+accountId+ '",'
+   +'"paymentId":"'+paymentId+ '",'
+   +'"paymentAmount":'+paymentAmount+ ','
+   +'"refundReasonCode":"'+refundReasonCode+ '",'
+   +'"selectedAddress":"'+selectedAddress+ '",'
+   +'"refundId":"'+refundId+ '",'
+   +'"refundMode":"",'
+   +'"comments":"'+comment+ '",'
+   +'"shiftId":'+shiftId + ','   
+   +'"personId":'+personId + ','   
+   +'"checkNumber":'+checkNumber + ','
+   +'"checkEnteredDate":'+checkEnteredDate + ','
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":'+locationId +','
+   +'"shiftId":'+shiftId             
+    +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="refundId">
+              <camunda:script scriptFormat="JavaScript">var system = java.lang.System;
+
+system.out.println('WsService updateRefund Response' + response);
+
+S(response).prop('refundId').numberValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="refundDetailDTO">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hxs1sj</bpmn:incoming>
+      <bpmn:outgoing>Flow_0uipphh</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_1qi84od">
+      <bpmn:incoming>Flow_1lwv4qr</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hxs1sj</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1qdlrbl</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1hxs1sj" sourceRef="Gateway_1qi84od" targetRef="Activity_1p6xbs8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='S'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1qdlrbl" sourceRef="Gateway_1qi84od" targetRef="EndEvent_1xbec1n">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='C'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0uipphh" sourceRef="Activity_1p6xbs8" targetRef="Activity_0ztk4ol" />
+    <bpmn:sequenceFlow id="Flow_1lwv4qr" sourceRef="Activity_0ztk4ol" targetRef="Gateway_1qi84od" />
+    <bpmn:userTask id="UserTask_1dk6owh" name="Ready For Assignment Queue" camunda:candidateGroups="rhAdministrator,rhAsst_Director,rhCSC_Manager,rhCSC_Asst_Manager,rhFin_Manager">
+      <bpmn:documentation>Ready For Assignment Queue</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_11r7k4i</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18gcvhm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_18gcvhm" name="Assign to Reviewer" sourceRef="UserTask_1dk6owh" targetRef="UserTask_1oozcnv" />
+    <bpmn:sequenceFlow id="SequenceFlow_11r7k4i" sourceRef="ExclusiveGateway_12igw1w" targetRef="UserTask_1dk6owh">
+      <bpmn:documentation>Test  Approval Flag</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approval==false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ServiceTask_1vzt76a" name="Update Refund Record in Rite">
+      <bpmn:documentation>Call Mendix Web Service to create account</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">
+              <camunda:script scriptFormat="JavaScript">var adapterUrl = execution.getVariable('adapterUrl'); 
+adapterUrl + '/unsecure/payment/updateRefund';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Accept">application/json</camunda:entry>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var paymentId=execution.getVariable("paymentId");
+var paymentAmount=execution.getVariable("paymentAmount");
+var accountId=execution.getVariable("accountId");
+var refundReasonCode=execution.getVariable("refundReasonCode");
+var personId=execution.getVariable("personId");
+var userName=execution.getVariable("userName");
+var locationId=execution.getVariable("locationInfoId");
+var shiftId=execution.getVariable("shiftId");
+var selectedAddress=execution.getVariable("selectedAddress");
+var refundId=execution.getVariable("refundId");	
+var refundMode=execution.getVariable("refundMode");                
+var comment=execution.getVariable("comment"); 
+var addressId=execution.getVariable("addressId"); 
+
+
+'{'
+   +'"accountId":"'+accountId+ '",'
+   +'"paymentId":"'+paymentId+ '",'
+   +'"paymentAmount":'+paymentAmount+ ','
+   +'"refundReasonCode":"'+refundReasonCode+ '",'
+   +'"selectedAddress":"'+selectedAddress+ '",'
+   +'"refundId":"'+refundId+ '",'
+   +'"refundMode":"",'
+   +'"comments":"'+comment+ '",'
+   +'"shiftId":'+shiftId + ','   
+   +'"personId":'+personId + ','   
+   +'"addressId":'+addressId + ','  
+   +'"userDTO": {'
+   +'"username":"'+userName+ '",'
+   +'"locationId":'+locationId +','
+   +'"shiftId":'+shiftId             
+    +'}'
++'}';</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="refundId">
+              <camunda:script scriptFormat="JavaScript">var system = java.lang.System;
+
+system.out.println('WsService update refund Response' + response);
+
+S(response).prop('refundId').numberValue();</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="refundDetailDTO">
+              <camunda:script scriptFormat="JavaScript">S(response);</camunda:script>
+            </camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:properties>
+          <camunda:property name="url" value="https://etcc-test.mendixcloud.com/rest" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0xpfr4s</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1q32ips</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0xpfr4s" name="update refunds by supervisor" sourceRef="ExclusiveGateway_11pxlj1" targetRef="ServiceTask_1vzt76a">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action=='S'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1yweqjw" sourceRef="UserTask_0luto8e" targetRef="ExclusiveGateway_11pxlj1" />
+    <bpmn:sequenceFlow id="SequenceFlow_1q32ips" sourceRef="ServiceTask_1vzt76a" targetRef="UserTask_0luto8e" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Refunds">
+      <bpmndi:BPMNEdge id="Flow_1juvite_di" bpmnElement="Flow_1juvite">
+        <di:waypoint x="700" y="330" />
+        <di:waypoint x="587" y="330" />
+        <di:waypoint x="587" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1omw4u2_di" bpmnElement="Flow_1omw4u2">
+        <di:waypoint x="750" y="455" />
+        <di:waypoint x="750" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f0eoea_di" bpmnElement="Flow_1f0eoea">
+        <di:waypoint x="1405" y="131" />
+        <di:waypoint x="1732" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0r5567l_di" bpmnElement="Flow_0r5567l">
+        <di:waypoint x="1380" y="156" />
+        <di:waypoint x="1380" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0101ro2_di" bpmnElement="Flow_0101ro2">
+        <di:waypoint x="1330" y="131" />
+        <di:waypoint x="1355" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0nbmnk9_di" bpmnElement="SequenceFlow_0nbmnk9">
+        <di:waypoint x="750" y="670" />
+        <di:waypoint x="750" y="732" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_123t5bc_di" bpmnElement="SequenceFlow_123t5bc">
+        <di:waypoint x="346" y="131" />
+        <di:waypoint x="426" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i0v0i3_di" bpmnElement="SequenceFlow_1i0v0i3">
+        <di:waypoint x="526" y="131" />
+        <di:waypoint x="562" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fk30v3_di" bpmnElement="SequenceFlow_0fk30v3">
+        <di:waypoint x="879" y="131" />
+        <di:waypoint x="1230" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1sc6pww_di" bpmnElement="SequenceFlow_1sc6pww">
+        <di:waypoint x="930" y="480" />
+        <di:waypoint x="992" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ghxih9_di" bpmnElement="SequenceFlow_0ghxih9">
+        <di:waypoint x="750" y="505" />
+        <di:waypoint x="750" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14bm1ht_di" bpmnElement="SequenceFlow_14bm1ht">
+        <di:waypoint x="775" y="480" />
+        <di:waypoint x="830" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="932" y="436" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0nzbs83_di" bpmnElement="SequenceFlow_0nzbs83">
+        <di:waypoint x="1430" y="480" />
+        <di:waypoint x="1492" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14lc1q3_di" bpmnElement="SequenceFlow_14lc1q3">
+        <di:waypoint x="1185" y="480" />
+        <di:waypoint x="1330" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1242" y="486" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_15f74a1_di" bpmnElement="SequenceFlow_15f74a1">
+        <di:waypoint x="1160" y="455" />
+        <di:waypoint x="1160" y="131" />
+        <di:waypoint x="1230" y="131" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1166" y="301" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_149aijn_di" bpmnElement="SequenceFlow_149aijn">
+        <di:waypoint x="637" y="480" />
+        <di:waypoint x="725" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0zdx7bf_di" bpmnElement="SequenceFlow_0zdx7bf">
+        <di:waypoint x="612" y="131" />
+        <di:waypoint x="779" y="131" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="658" y="97" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1u7nx5y_di" bpmnElement="SequenceFlow_1u7nx5y">
+        <di:waypoint x="192" y="131" />
+        <di:waypoint x="246" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hxs1sj_di" bpmnElement="Flow_1hxs1sj">
+        <di:waypoint x="1660" y="295" />
+        <di:waypoint x="1660" y="410" />
+        <di:waypoint x="1600" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qdlrbl_di" bpmnElement="Flow_1qdlrbl">
+        <di:waypoint x="1660" y="245" />
+        <di:waypoint x="1660" y="131" />
+        <di:waypoint x="1732" y="131" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uipphh_di" bpmnElement="Flow_0uipphh">
+        <di:waypoint x="1500" y="410" />
+        <di:waypoint x="1380" y="410" />
+        <di:waypoint x="1380" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lwv4qr_di" bpmnElement="Flow_1lwv4qr">
+        <di:waypoint x="1430" y="270" />
+        <di:waypoint x="1635" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_1azwpve_di" bpmnElement="Refund">
+        <dc:Bounds x="156" y="113" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="160" y="156" width="32" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_12igw1w_di" bpmnElement="ExclusiveGateway_12igw1w" isMarkerVisible="true">
+        <dc:Bounds x="562" y="106" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="564" y="83" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_11pxlj1_di" bpmnElement="ExclusiveGateway_11pxlj1" isMarkerVisible="true">
+        <dc:Bounds x="1135" y="455" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_17z45dm_di" bpmnElement="BusinessRuleTask_17z45dm">
+        <dc:Bounds x="246" y="91" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1oozcnv_di" bpmnElement="UserTask_1oozcnv">
+        <dc:Bounds x="537" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0ao714c_di" bpmnElement="ServiceTask_0ao714c">
+        <dc:Bounds x="426" y="91" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_12c93t6_di" bpmnElement="ServiceTask_12c93t6">
+        <dc:Bounds x="1230" y="91" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1udxg5a_di" bpmnElement="ExclusiveGateway_1udxg5a" isMarkerVisible="true">
+        <dc:Bounds x="725" y="455" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1nl87u7_di" bpmnElement="EndEvent_1nl87u7">
+        <dc:Bounds x="1492" y="462" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0luto8e_di" bpmnElement="UserTask_0luto8e">
+        <dc:Bounds x="992" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_07a9q21_di" bpmnElement="ServiceTask_07a9q21">
+        <dc:Bounds x="1330" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_12iz7em_di" bpmnElement="ServiceTask_12iz7em">
+        <dc:Bounds x="830" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0fuv6xe_di" bpmnElement="ServiceTask_0fuv6xe">
+        <dc:Bounds x="700" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1hf3w0t_di" bpmnElement="ServiceTask_1hf3w0t">
+        <dc:Bounds x="779" y="91" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_08t5yyj_di" bpmnElement="EndEvent_08t5yyj">
+        <dc:Bounds x="732" y="732" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13rposs_di" bpmnElement="Activity_0ztk4ol">
+        <dc:Bounds x="1330" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_00v33up_di" bpmnElement="Gateway_00v33up" isMarkerVisible="true">
+        <dc:Bounds x="1355" y="106" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0t15uw6_di" bpmnElement="Activity_0t15uw6">
+        <dc:Bounds x="700" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1xbec1n_di" bpmnElement="EndEvent_1xbec1n">
+        <dc:Bounds x="1732" y="113" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1qi84od_di" bpmnElement="Gateway_1qi84od" isMarkerVisible="true">
+        <dc:Bounds x="1635" y="245" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1p6xbs8_di" bpmnElement="Activity_1p6xbs8">
+        <dc:Bounds x="1500" y="370" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1dk6owh_di" bpmnElement="UserTask_1dk6owh">
+        <dc:Bounds x="537" y="213" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18gcvhm_di" bpmnElement="SequenceFlow_18gcvhm">
+        <di:waypoint x="587" y="293" />
+        <di:waypoint x="587" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="532" y="316.00000000000637" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11r7k4i_di" bpmnElement="SequenceFlow_11r7k4i">
+        <di:waypoint x="587" y="156" />
+        <di:waypoint x="587" y="213" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="378" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1vzt76a_di" bpmnElement="ServiceTask_1vzt76a">
+        <dc:Bounds x="1110" y="578" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xpfr4s_di" bpmnElement="SequenceFlow_0xpfr4s">
+        <di:waypoint x="1160" y="505" />
+        <di:waypoint x="1160" y="578" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1yweqjw_di" bpmnElement="SequenceFlow_1yweqjw">
+        <di:waypoint x="1092" y="480" />
+        <di:waypoint x="1135" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1q32ips_di" bpmnElement="SequenceFlow_1q32ips">
+        <di:waypoint x="1110" y="618" />
+        <di:waypoint x="1042" y="618" />
+        <di:waypoint x="1042" y="520" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

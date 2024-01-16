@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_19fw0ln" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Sub" name="Main">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1">
+        <inputExpression id="inputExpression_1" typeRef="integer">
+          <text>Salary</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" name="result" typeRef="integer" />
+      <rule id="DecisionRule_1e2qry4">
+        <inputEntry id="UnaryTests_10ifep6">
+          <text>&gt;5000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_14j9ozl">
+          <text>1</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_041d5hj">
+        <inputEntry id="UnaryTests_04x6x0k">
+          <text>&lt;5000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1sf822a">
+          <text>0</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

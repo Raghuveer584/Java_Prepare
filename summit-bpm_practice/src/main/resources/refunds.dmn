@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_1w9er9s" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Refunds" name="Refunds">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="paymentAmount">
+        <inputExpression id="inputExpression_1" typeRef="double">
+          <text>paymentAmount</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0g7dadz" label="refundReasonCode">
+        <inputExpression id="LiteralExpression_15qkzeq" typeRef="string">
+          <text>refundReasonCode</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0uuwmxm" label="refundMode">
+        <inputExpression id="LiteralExpression_0ifayao" typeRef="string">
+          <text>refundMode</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="approval" name="approval" typeRef="boolean" />
+      <rule id="DecisionRule_1lzz5c5">
+        <inputEntry id="UnaryTests_1y5lduf">
+          <text>&lt;5.0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1i7em4e">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1nzcq1i">
+          <text>"CHECK","CREDITCARD","CREDIT"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0zajnkl">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0l6ph1w">
+        <inputEntry id="UnaryTests_100yyyf">
+          <text>&gt;=5.0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_07uohvn">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_06f0dun">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_178mec0">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

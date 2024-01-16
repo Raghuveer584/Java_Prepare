@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:camunda="http://camunda.org/schema/1.0/dmn" id="Definitions_13g7tjz" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="SplitPayments" name="SplitPayments">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="totalAmount" camunda:inputVariable="splitDetails">
+        <inputExpression id="inputExpression_1" typeRef="double">
+          <text>totalAmount</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_1fa3tws" label="accountId" camunda:inputVariable="accountId">
+        <inputExpression id="LiteralExpression_1w6ih3o" typeRef="string">
+          <text>accountId</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_1du794l" label="paymentId" camunda:inputVariable="paymentId">
+        <inputExpression id="LiteralExpression_1ypl6c9" typeRef="string">
+          <text>paymentId</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Status" name="Status" typeRef="boolean" />
+      <rule id="DecisionRule_1j03pbe">
+        <description>Approval</description>
+        <inputEntry id="UnaryTests_140e32o">
+          <text>&lt;10</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0clqy6q">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1njf6b8">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1vrvc9s">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1f074fv">
+        <description>Pending</description>
+        <inputEntry id="UnaryTests_0wuylf6">
+          <text>&gt;=10</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0pptkjk">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_113r6n2">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_14za0ay">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" xmlns:camunda="http://camunda.org/schema/1.0/dmn" id="Definitions_0x4f1o4" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.1.2">
+  <decision id="InvoiceEscalation" name="InvoiceEscalationRule">
+    <extensionElements>
+      <biodi:bounds x="150" y="150" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="EscalationStateCode" camunda:inputVariable="EscalationStateCode">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>EscalationStateCode</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="DueDate" name="DueDate" typeRef="string" />
+      <output id="OutputClause_1dtxj6g" label="NextEscalationCode" name="NextEscalationCode" typeRef="string" />
+      <rule id="DecisionRule_11ywhlf">
+        <description>from Toll Invoice to NNP</description>
+        <inputEntry id="UnaryTests_13n4if5">
+          <text>"HC_TVI"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0xmcub4">
+          <text>"P1D"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_043d14z">
+          <text>"HC_MBH"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0i22p7c">
+        <description>from NNP to Toll Violation</description>
+        <inputEntry id="UnaryTests_0d2mqcf">
+          <text>"HC_MBH"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_03xiipo">
+          <text>"P1D"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_14508qg">
+          <text>"HC_FP"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0qkdlu4">
+        <description>from Toll Violation to Collections</description>
+        <inputEntry id="UnaryTests_1k3cm4g">
+          <text>"HC_FP"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0a2o7ow">
+          <text>"P1D"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13z1xya">
+          <text>"HC_CA"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
